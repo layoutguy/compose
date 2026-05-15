@@ -1,0 +1,217 @@
+:root {
+  --bg-base: #0A0A0C;
+  --bg-panel: #111116;
+  --bg-canvas: #0D0D10;
+  --bg-elevated: #18181E;
+  --bg-hover: rgba(255, 255, 255, 0.035);
+  --bg-active: rgba(255, 255, 255, 0.07);
+  --bg-input: rgba(255, 255, 255, 0.04);
+
+  --border: rgba(255, 255, 255, 0.055);
+  --border-strong: rgba(255, 255, 255, 0.10);
+  --border-input: rgba(255, 255, 255, 0.08);
+
+  --text-primary: #EDEAE2;
+  --text-secondary: #58585E;
+  --text-tertiary: #38383E;
+
+  --accent-blue: #4F7FD9;
+  --accent-blue-glow: rgba(79, 127, 217, 0.20);
+  --accent-green: #4DB882;
+
+  --export-bg: #E2D9C2;
+  --export-text: #1A1814;
+
+  --panel-width: 268px;
+  --topbar-height: 64px;
+  --statusbar-height: 40px;
+
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 24px;
+
+  /* Motion — deceleration curve (Linear / Framer style) */
+  --ease-out:    cubic-bezier(0.25, 0, 0, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.2, 0.64, 1);   /* subtle overshoot, never bouncy */
+  --t-instant: 80ms;
+  --t-fast:   140ms;
+  --t-med:    220ms;
+  --t-slow:   360ms;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  animation: appReveal 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes appReveal {
+  from {
+    opacity:   0;
+    filter:    blur(20px);
+    transform: scale(0.985);
+  }
+  to {
+    opacity:   1;
+    filter:    blur(0px);
+    transform: scale(1);
+  }
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  /* Subtle press feedback on all buttons — overridable per-component */
+  transition: transform var(--t-instant) var(--ease-out),
+              opacity  var(--t-instant) var(--ease-out);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+
+input {
+  font: inherit;
+  color: inherit;
+  outline: none;
+  border: none;
+  background: none;
+}
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.12); }
+
+/* ─── Precision slider ──────────────────────────────────────────────────────── */
+
+.precision-slider-wrap {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-xs);
+  transition: opacity var(--t-fast) var(--ease-out);
+}
+
+.precision-slider-wrap:hover .precision-slider::-webkit-slider-runnable-track {
+  background:
+    repeating-linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.22) 0px,
+      rgba(255, 255, 255, 0.22) 1px,
+      transparent 1px,
+      transparent 5px
+    );
+}
+
+.precision-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  background: transparent;
+  cursor: ew-resize;
+  padding: 0;
+  margin: 0;
+}
+
+.precision-slider::-webkit-slider-runnable-track {
+  height: 20px;
+  background:
+    repeating-linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.11) 0px,
+      rgba(255, 255, 255, 0.11) 1px,
+      transparent 1px,
+      transparent 5px
+    );
+  transition: background var(--t-fast) var(--ease-out);
+}
+
+.precision-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 2px;
+  height: 20px;
+  background: var(--accent-blue);
+  border: none;
+  border-radius: 1px;
+  cursor: ew-resize;
+  margin-top: 0;
+  box-shadow: 0 0 6px rgba(79, 127, 217, 0.5);
+  transition: box-shadow var(--t-fast) var(--ease-out);
+}
+
+.precision-slider:active::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(79, 127, 217, 0.15), 0 0 12px rgba(79, 127, 217, 0.6);
+}
+
+.precision-slider::-moz-range-track {
+  height: 20px;
+  background:
+    repeating-linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.11) 0px,
+      rgba(255, 255, 255, 0.11) 1px,
+      transparent 1px,
+      transparent 5px
+    );
+  border: none;
+}
+
+.precision-slider::-moz-range-thumb {
+  width: 2px;
+  height: 20px;
+  background: var(--accent-blue);
+  border: none;
+  border-radius: 1px;
+  cursor: ew-resize;
+  box-shadow: 0 0 6px rgba(79, 127, 217, 0.5);
+}
+
+.precision-slider:focus {
+  outline: none;
+}
+
+/* ─── Popup entrance ────────────────────────────────────────────────────────── */
+
+@keyframes popupIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px) scale(0.97); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0)   scale(1);    }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

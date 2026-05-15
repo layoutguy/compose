@@ -1,0 +1,604 @@
+import { useRef, useEffect, useState, useCallback } from 'react'
+import { renderArtboard } from '../canvas/artboard'
+import { renderGrid, computeGridLayout } from '../canvas/grid'
+import { renderLogo, applyLogoMask, computeLogoGeometry } from '../canvas/logo'
+import { useViewport } from '../hooks/useViewport'
+import { useComposition } from '../hooks/useComposition'
+
+// ─── Handle definitions ───────────────────────────────────────────────────────
+
+const HANDLES = [
+  { id: 'tl', cursor: 'nw-resize', fx: 0,   fy: 0,   dx: -1, dy: -1 },
+  { id: 'tc', cursor: 'n-resize',  fx: 0.5, fy: 0,   dx:  0, dy: -1 },
+  { id: 'tr', cursor: 'ne-resize', fx: 1,   fy: 0,   dx:  1, dy: -1 },
+  { id: 'ml', cursor: 'w-resize',  fx: 0,   fy: 0.5, dx: -1, dy:  0 },
+  { id: 'mr', cursor: 'e-resize',  fx: 1,   fy: 0.5, dx:  1, dy:  0 },
+  { id: 'bl', cursor: 'sw-resize', fx: 0,   fy: 1,   dx: -1, dy:  1 },
+  { id: 'bc', cursor: 's-resize',  fx: 0.5, fy: 1,   dx:  0, dy:  1 },
+  { id: 'br', cursor: 'se-resize', fx: 1,   fy: 1,   dx:  1, dy:  1 },
+]
+
+// ─── Logo resize handles overlay ──────────────────────────────────────────────
+
+function LogoHandles({ rect, visible, onHandleMouseDown }) {
+  if (!visible || !rect) return null
+  return (
+    <div style={{
+      position: 'absolute',
+      left: rect.x, top: rect.y,
+      width: rect.w, height: rect.h,
+      pointerEvents: 'none', zIndex: 20,
+    }}>
+      <div style={{
+        position: 'absolute', inset: 0,
+        outline: '1px dashed rgba(79,127,217,0.55)',
+        pointerEvents: 'none',
+      }} />
+      {HANDLES.map(h => (
+        <div
+          key={h.id}
+          onMouseDown={e => { e.stopPropagation(); e.preventDefault(); onHandleMouseDown(h, e) }}
+          style={{
+            position: 'absolute',
+            left: `${h.fx * 100}%`, top: `${h.fy * 100}%`,
+            transform: 'translate(-50%, -50%)',
+            width: 8, height: 8,
+            border: '1.5px solid rgba(79,127,217,0.9)',
+            background: '#0A0A0C',
+            borderRadius: 2,
+            cursor: h.cursor,
+            pointerEvents: 'all',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.6)',
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+// ─── Overlays ─────────────────────────────────────────────────────────────────
+
+function ZoomBadge({ percent }) {
+  return (
+    <div style={{
+      position: 'absolute', top: 14, right: 14,
+      padding: '4px 8px',
+      background: 'rgba(10,10,12,0.72)',
+      backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+      border: '1px solid rgba(255,255,255,0.06)',
+      borderRadius: 'var(--radius-sm)',
+      fontSize: 10, fontWeight: 500, color: 'var(--text-tertiary)',
+      letterSpacing: '0.06em', fontVariantNumeric: 'tabular-nums',
+      pointerEvents: 'none', userSelect: 'none',
+      transition: 'color 220ms cubic-bezier(0.25,0,0,1)',
+    }}>
+      {percent}%
+    </div>
+  )
+}
+
+function DimensionLabel({ w, h }) {
+  function gcd(a, b) { return b === 0 ? a : gcd(b, a % b) }
+  const d   = gcd(w, h)
+  const arW = w / d
+  const arH = h / d
+  const arLabel = (arW <= 64 && arH <= 64) ? ` — ${arW}:${arH}` : ''
+  return (
+    <div style={{
+      position: 'absolute', top: -24, left: '50%', transform: 'translateX(-50%)',
+      display: 'flex', alignItems: 'center', gap: 6,
+      fontSize: 10, color: 'var(--text-tertiary)',
+      letterSpacing: '0.06em', whiteSpace: 'nowrap',
+      pointerEvents: 'none', userSelect: 'none',
+    }}>
+      <span style={{ fontVariantNumeric: 'tabular-nums' }}>{w} × {h}</span>
+      {arLabel && <span style={{ opacity: 0.5 }}>{arLabel}</span>}
+    </div>
+  )
+}
+
+function DropOverlay() {
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, zIndex: 40,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'rgba(10,10,12,0.78)',
+      backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+      pointerEvents: 'none',
+    }}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
+        padding: '36px 56px',
+        border: '1.5px dashed rgba(79,127,217,0.55)',
+        borderRadius: 'var(--radius-xl)',
+      }}>
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <path d="M14 20V8M14 8L9 13M14 8L19 13"
+            stroke="rgba(79,127,217,0.9)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M4 22v1.5h20V22" stroke="rgba(79,127,217,0.9)" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+        <span style={{ fontSize: 12, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(79,127,217,0.9)' }}>
+          Drop logo here
+        </span>
+        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.04em' }}>SVG or PNG</span>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+const ACCEPTED_TYPES = new Set(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
+
+export default function CanvasArea() {
+  const containerRef = useRef(null)
+  const canvasRef    = useRef(null)
+  const rafRef       = useRef(null)
+
+  const { computeLayout, zoom }                                        = useViewport()
+  const { grid, display, dot, logo, advanced, setLogoFile, setLogoParam } = useComposition()
+
+  // ─── Canvas frame dimensions — React-controlled so layout changes immediately ──
+  // These drive the canvas element's CSS width/height via JSX (not imperative DOM).
+  // When outputW/H changes, React re-renders and the frame reshapes before any drawing.
+  const [frameW,   setFrameW]   = useState(0)
+  const [frameH,   setFrameH]   = useState(0)
+  const [percent,  setPercent]  = useState(100)
+
+  const [isDragOver,    setIsDragOver]    = useState(false)
+  const [logoSelected,  setLogoSelected]  = useState(false)
+  const [logoRect,      setLogoRect]      = useState(null)
+
+  // ── Stable refs for drawing ──────────────────────────────────────────────────
+  const gridRef     = useRef(grid)
+  const displayRef  = useRef(display)
+  const dotRef      = useRef(dot)
+  const logoRef     = useRef(logo)
+  const advancedRef = useRef(advanced)
+  useEffect(() => { gridRef.current     = grid    }, [grid])
+  useEffect(() => { displayRef.current  = display }, [display])
+  useEffect(() => { dotRef.current      = dot     }, [dot])
+  useEffect(() => { logoRef.current     = logo    }, [logo])
+  useEffect(() => { advancedRef.current = advanced }, [advanced])
+
+  // Layout ref — drawing function reads current frame size without stale closures
+  const layoutRef = useRef({ displayW: 0, displayH: 0, fitScale: 1, finalScale: 1 })
+
+  // ── Loaded image elements ────────────────────────────────────────────────────
+  const logoImgRef = useRef(null)
+  const bgImgRef   = useRef(null)
+
+  // ── Offscreen canvas ─────────────────────────────────────────────────────────
+  const offscreenRef = useRef(null)
+
+  // ── Resize drag state ────────────────────────────────────────────────────────
+  const resizeDragRef = useRef(null)
+
+  // ── Logo body drag state ─────────────────────────────────────────────────────
+  // { startX, startY, startOffsetX, startOffsetY, fitScale, moved }
+  const logoDragRef      = useRef(null)
+  const logoDragMovedRef = useRef(false) // survives mouseup so click handler can check
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // LAYOUT COMPUTATION — completely separate from drawing.
+  //
+  // This is called any time the container size OR the artboard dimensions change.
+  // It updates React state (frameW/H), which causes React to set canvas CSS
+  // width/height via JSX props — guaranteeing the frame physically reshapes.
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const computeCanvasLayout = useCallback(() => {
+    const container = containerRef.current
+    if (!container) return
+    const { width, height } = container.getBoundingClientRect()
+    if (!width || !height) return
+    const adv = advancedRef.current
+    const result = computeLayout(width, height, adv.outputW, adv.outputH)
+    layoutRef.current = result
+    setFrameW(result.displayW)
+    setFrameH(result.displayH)
+    setPercent(Math.round(result.finalScale * 100))
+  }, [computeLayout])
+
+  // Recompute layout whenever outputW, outputH, or zoom changes
+  // (zoom is captured inside computeLayout's closure)
+  useEffect(() => {
+    computeCanvasLayout()
+  }, [advanced.outputW, advanced.outputH, zoom, computeCanvasLayout])
+
+  // ResizeObserver for container size changes
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    computeCanvasLayout() // initial
+    const ro = new ResizeObserver(computeCanvasLayout)
+    ro.observe(container)
+    return () => { ro.disconnect(); if (rafRef.current) cancelAnimationFrame(rafRef.current) }
+  }, [computeCanvasLayout])
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // DRAWING — reads layout from layoutRef, never sets canvas CSS dimensions.
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const render = useCallback(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const { displayW, displayH, fitScale } = layoutRef.current
+    if (!displayW || !displayH) return
+
+    const adv = advancedRef.current
+    const dpr = adv.retinaPreview ? (window.devicePixelRatio || 1) : 1
+
+    const physW = Math.round(displayW * dpr)
+    const physH = Math.round(displayH * dpr)
+    if (canvas.width !== physW || canvas.height !== physH) {
+      canvas.width  = physW
+      canvas.height = physH
+    }
+    // CSS dimensions are owned by React (frameW/H state → JSX props).
+    // Do NOT set canvas.style.width/height here.
+
+    const bgOpts = {
+      bgType:          adv.bgType,
+      bgColor:         adv.bgColor,
+      bgGradientFrom:  adv.bgGradientFrom,
+      bgGradientTo:    adv.bgGradientTo,
+      bgGradientAngle: adv.bgGradientAngle,
+      bgImageEl:       bgImgRef.current,
+    }
+
+    renderArtboard(canvas, displayW, displayH, dpr, fitScale, false, bgOpts)
+
+    const ctx    = canvas.getContext('2d')
+    const offCtx = offscreenRef.current?.getContext('2d')
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+
+    const hasLogo   = !!logoImgRef.current
+    const dims      = { outputW: adv.outputW, outputH: adv.outputH }
+    const layout    = computeGridLayout(gridRef.current, dims)
+    const blendMode = adv.blendMode ?? 'normal'
+
+    const gridOpts = {
+      showGuides: false,
+      showDots:   displayRef.current.showDots,
+      dot:        dotRef.current,
+      jitter:     adv.jitter,
+      seed:       adv.seed,
+      outputW:    adv.outputW,
+      outputH:    adv.outputH,
+    }
+
+    if (hasLogo && offCtx) {
+      const off = offscreenRef.current
+      if (off.width !== physW || off.height !== physH) {
+        off.width  = physW
+        off.height = physH
+      }
+      offCtx.clearRect(0, 0, physW, physH)
+      offCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      renderGrid(offCtx, dpr, fitScale, gridRef.current, gridOpts)
+      applyLogoMask(offCtx, fitScale, gridRef.current, layout, logoImgRef.current, logoRef.current, dotRef.current.size)
+
+      ctx.save()
+      if (blendMode !== 'normal') ctx.globalCompositeOperation = blendMode
+      ctx.drawImage(off, 0, 0, displayW, displayH)
+      ctx.restore()
+
+      renderLogo(ctx, dpr, fitScale, gridRef.current, layout, logoImgRef.current, logoRef.current)
+
+      const geom = computeLogoGeometry(gridRef.current, layout, logoImgRef.current, logoRef.current)
+      setLogoRect({
+        x:        geom.logoX    * fitScale,
+        y:        geom.logoY    * fitScale,
+        w:        geom.logoWOut * fitScale,
+        h:        geom.logoHOut * fitScale,
+        spacingX: layout.spacingX,
+        fitScale,
+        aspect:   geom.logoHOut / geom.logoWOut,
+      })
+    } else {
+      ctx.save()
+      if (blendMode !== 'normal') ctx.globalCompositeOperation = blendMode
+      renderGrid(ctx, dpr, fitScale, gridRef.current, gridOpts)
+      ctx.restore()
+      setLogoRect(null)
+    }
+  }, []) // stable — all state read from refs
+
+  const scheduleRender = useCallback(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(render)
+  }, [render])
+
+  // Re-draw when frame dimensions update (layout changed) or content changes
+  useEffect(() => { scheduleRender() }, [frameW, frameH,   scheduleRender])
+  useEffect(() => { scheduleRender() }, [grid,              scheduleRender])
+  useEffect(() => { scheduleRender() }, [display,           scheduleRender])
+  useEffect(() => { scheduleRender() }, [dot,               scheduleRender])
+  useEffect(() => { scheduleRender() }, [logo,              scheduleRender])
+  useEffect(() => { scheduleRender() }, [advanced,          scheduleRender])
+
+  // ── Load logo image ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    // Clear immediately so the old image never renders during the loading gap
+    logoImgRef.current = null
+    setLogoRect(null)
+    setLogoSelected(false)
+    scheduleRender()   // redraw now (without any logo) to remove trail
+
+    if (!logo.url) return
+
+    const img = new Image()
+    img.onload  = () => {
+      logoImgRef.current = img
+      if (!offscreenRef.current) offscreenRef.current = document.createElement('canvas')
+      setLogoSelected(true)
+      scheduleRender()
+    }
+    img.onerror = () => { logoImgRef.current = null; scheduleRender() }
+    img.src = logo.url
+  }, [logo.url, scheduleRender])
+
+  // ── Load background image ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!advanced.bgImageUrl) { bgImgRef.current = null; scheduleRender(); return }
+    const img = new Image()
+    img.onload  = () => { bgImgRef.current = img; scheduleRender() }
+    img.onerror = () => { bgImgRef.current = null }
+    img.src = advanced.bgImageUrl
+  }, [advanced.bgImageUrl, scheduleRender])
+
+  // ── Snap helper — find nearest grid dot and return snapped offsetX/Y ───────────
+  // Snaps the logo's handle point (defined by position/alignX/Y) to the nearest dot.
+  // offsetX/Y are relative to grid center, so the handle = gridCenter + offset.
+  const snapToNearestDot = useCallback((freeOffX, freeOffY) => {
+    const grid = gridRef.current
+    const adv  = advancedRef.current
+    if (!grid) return { offsetX: freeOffX, offsetY: freeOffY }
+
+    const layout = computeGridLayout(grid, { outputW: adv.outputW, outputH: adv.outputH })
+    const { originX, originY, spacingX, spacingY } = layout
+    const { cols, rows } = grid
+
+    // Grid center (handle base)
+    const gridCX = originX + (cols - 1) / 2 * spacingX
+    const gridCY = originY + (rows - 1) / 2 * spacingY
+
+    // Handle position in output space
+    const handleX = gridCX + freeOffX
+    const handleY = gridCY + freeOffY
+
+    // Nearest dot (clamped to grid)
+    const col  = Math.max(0, Math.min(cols - 1, Math.round((handleX - originX) / spacingX)))
+    const row  = Math.max(0, Math.min(rows - 1, Math.round((handleY - originY) / spacingY)))
+    const dotX = originX + col * spacingX
+    const dotY = originY + row * spacingY
+
+    // Offset = dot position relative to grid center
+    return {
+      offsetX: Math.round(dotX - gridCX),
+      offsetY: Math.round(dotY - gridCY),
+    }
+  }, []) // reads only from stable refs
+
+  // ── Re-snap when Snap is toggled ON ──────────────────────────────────────────
+  useEffect(() => {
+    if (!display.showGuides) return
+    if (!logoImgRef.current || !logoRef.current?.url) return
+    const lo = logoRef.current
+    const snapped = snapToNearestDot(lo.offsetX, lo.offsetY)
+    setLogoParam('offsetX', snapped.offsetX)
+    setLogoParam('offsetY', snapped.offsetY)
+  }, [display.showGuides]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Global mouse listeners for logo resize drag + logo body drag ──────────────
+  useEffect(() => {
+    const onMove = (e) => {
+      // ── Resize handle drag ──────────────────────────────────────────────────
+      const drag = resizeDragRef.current
+      if (drag) {
+        const deltaX = e.clientX - drag.startX
+        const deltaY = e.clientY - drag.startY
+        let rawDelta = 0
+        if (drag.dx !== 0 && drag.dy !== 0) {
+          rawDelta = (deltaX * drag.dx + deltaY * drag.dy) / 2
+        } else if (drag.dx !== 0) {
+          rawDelta = deltaX * drag.dx
+        } else {
+          const deltaHDisplay = deltaY * drag.dy
+          const deltaHOut     = deltaHDisplay / drag.fitScale
+          const newLogoHOut   = drag.startLogoHOut + deltaHOut
+          const newLogoWOut   = Math.max(1, newLogoHOut / drag.aspect)
+          const newSizeDots   = Math.max(0.25, newLogoWOut / drag.spacingX)
+          setLogoParam('sizeDots', Math.round(newSizeDots * 10) / 10)
+          return
+        }
+        const deltaWOut   = rawDelta / drag.fitScale
+        const newLogoWOut = Math.max(1, drag.startLogoWOut + deltaWOut)
+        const newSizeDots = Math.max(0.25, newLogoWOut / drag.spacingX)
+        setLogoParam('sizeDots', Math.round(newSizeDots * 10) / 10)
+        return
+      }
+
+      // ── Logo body drag ──────────────────────────────────────────────────────
+      const ld = logoDragRef.current
+      if (!ld) return
+      const dx = e.clientX - ld.startX
+      const dy = e.clientY - ld.startY
+      if (!ld.moved && Math.abs(dx) + Math.abs(dy) > 2) {
+        ld.moved = true
+        logoDragMovedRef.current = true
+      }
+      if (ld.moved) {
+        const freeOffX = Math.round(ld.startOffsetX + dx / ld.fitScale)
+        const freeOffY = Math.round(ld.startOffsetY + dy / ld.fitScale)
+        if (displayRef.current.showGuides) {
+          // Snap mode — quantize to nearest grid dot
+          const snapped = snapToNearestDot(freeOffX, freeOffY)
+          setLogoParam('offsetX', snapped.offsetX)
+          setLogoParam('offsetY', snapped.offsetY)
+        } else {
+          // Free placement
+          setLogoParam('offsetX', freeOffX)
+          setLogoParam('offsetY', freeOffY)
+        }
+      }
+    }
+    const onUp = () => {
+      resizeDragRef.current = null
+      logoDragRef.current   = null
+      // cursor update handled by mousemove; logoDragMovedRef cleared in click handler
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup',   onUp)
+    return () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup',   onUp)
+    }
+  }, [setLogoParam])
+
+  const handleHandleMouseDown = useCallback((handle, e) => {
+    if (!logoRect) return
+    resizeDragRef.current = {
+      dx:           handle.dx,
+      dy:           handle.dy,
+      startX:       e.clientX,
+      startY:       e.clientY,
+      startLogoWOut: logo.sizeDots * logoRect.spacingX,
+      startLogoHOut: logo.sizeDots * logoRect.spacingX * logoRect.aspect,
+      spacingX:     logoRect.spacingX,
+      fitScale:     logoRect.fitScale,
+      aspect:       logoRect.aspect,
+    }
+  }, [logoRect, logo.sizeDots])
+
+  // ── Canvas mousedown — start logo body drag ──────────────────────────────────
+  const handleCanvasMouseDown = useCallback((e) => {
+    if (!logoRect || !logoSelected) return
+    const canvasEl = canvasRef.current
+    if (!canvasEl) return
+    const rect  = canvasEl.getBoundingClientRect()
+    const cssX  = e.clientX - rect.left
+    const cssY  = e.clientY - rect.top
+    const inside = cssX >= logoRect.x && cssX <= logoRect.x + logoRect.w &&
+                   cssY >= logoRect.y && cssY <= logoRect.y + logoRect.h
+    if (!inside) return
+    e.preventDefault()
+    logoDragMovedRef.current = false
+    logoDragRef.current = {
+      startX:       e.clientX,
+      startY:       e.clientY,
+      startOffsetX: logoRef.current.offsetX,
+      startOffsetY: logoRef.current.offsetY,
+      fitScale:     logoRect.fitScale,
+      moved:        false,
+    }
+  }, [logoRect, logoSelected])
+
+  // ── Canvas mousemove — update cursor when hovering logo body ─────────────────
+  const handleCanvasMouseMove = useCallback((e) => {
+    const canvasEl = canvasRef.current
+    if (!canvasEl) return
+    // While dragging (body or handle), cursor is handled globally
+    if (logoDragRef.current || resizeDragRef.current) return
+    if (!logoRect || !logoSelected) { canvasEl.style.cursor = 'default'; return }
+    const rect   = canvasEl.getBoundingClientRect()
+    const cssX   = e.clientX - rect.left
+    const cssY   = e.clientY - rect.top
+    const inside = cssX >= logoRect.x && cssX <= logoRect.x + logoRect.w &&
+                   cssY >= logoRect.y && cssY <= logoRect.y + logoRect.h
+    canvasEl.style.cursor = inside ? 'move' : 'default'
+  }, [logoRect, logoSelected])
+
+  // ── Canvas click — select / deselect logo ─────────────────────────────────────
+  const handleCanvasClick = useCallback((e) => {
+    // If the mousedown turned into a drag, ignore the synthetic click
+    if (logoDragMovedRef.current) { logoDragMovedRef.current = false; return }
+    if (!logoRect) { setLogoSelected(false); return }
+    const canvasEl = canvasRef.current
+    if (!canvasEl) return
+    const rect   = canvasEl.getBoundingClientRect()
+    const cssX   = e.clientX - rect.left
+    const cssY   = e.clientY - rect.top
+    const inside = cssX >= logoRect.x && cssX <= logoRect.x + logoRect.w &&
+                   cssY >= logoRect.y && cssY <= logoRect.y + logoRect.h
+    setLogoSelected(inside)
+  }, [logoRect])
+
+  // ── Drag / drop ───────────────────────────────────────────────────────────────
+  const handleDragOver = useCallback(e => {
+    e.preventDefault(); e.stopPropagation()
+    if ([...(e.dataTransfer?.types ?? [])].includes('Files')) setIsDragOver(true)
+  }, [])
+  const handleDragLeave = useCallback(e => {
+    e.preventDefault(); e.stopPropagation()
+    if (!e.currentTarget.contains(e.relatedTarget)) setIsDragOver(false)
+  }, [])
+  const handleDrop = useCallback(e => {
+    e.preventDefault(); e.stopPropagation()
+    setIsDragOver(false)
+    const file = e.dataTransfer?.files?.[0]
+    if (!file || !ACCEPTED_TYPES.has(file.type)) return
+    setLogoFile(file)
+  }, [setLogoFile])
+
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  return (
+    <div
+      ref={containerRef}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'radial-gradient(ellipse 80% 70% at 50% 50%, #14141A 0%, #0A0A0C 100%)',
+        overflow: 'hidden',
+        minHeight: 0,
+        position: 'relative',
+      }}
+    >
+      {/* Canvas wrapper — sized by React to match the artboard frame exactly */}
+      <div style={{ position: 'relative', flexShrink: 0 }}>
+        <DimensionLabel w={advanced.outputW} h={advanced.outputH} />
+
+        <canvas
+          ref={canvasRef}
+          onClick={handleCanvasClick}
+          onMouseDown={handleCanvasMouseDown}
+          onMouseMove={handleCanvasMouseMove}
+          style={{
+            display: 'block',
+            // React owns these — they are the artboard frame dimensions.
+            // Changed whenever outputW/H or zoom changes, BEFORE drawing.
+            width:  frameW > 0 ? frameW  : undefined,
+            height: frameH > 0 ? frameH : undefined,
+            cursor: 'default',
+            willChange: 'transform',          // GPU raster layer — avoids composite on resize
+            imageRendering: 'crisp-edges',
+            transition: 'width 180ms cubic-bezier(0.25,0,0,1), height 180ms cubic-bezier(0.25,0,0,1)',
+            boxShadow: [
+              '0 0 0 1px rgba(255,255,255,0.05)',
+              '0 4px 16px rgba(0,0,0,0.45)',
+              '0 24px 80px rgba(0,0,0,0.65)',
+            ].join(', '),
+          }}
+        />
+
+        <LogoHandles
+          rect={logoRect}
+          visible={logoSelected && !!logoRect}
+          onHandleMouseDown={handleHandleMouseDown}
+        />
+
+
+      </div>
+
+      <ZoomBadge percent={percent} />
+      {isDragOver && <DropOverlay />}
+    </div>
+  )
+}

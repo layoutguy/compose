@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/2026/**)",
+      "Bash(npm install *)"
+    ]
+  }
+}
