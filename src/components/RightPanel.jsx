@@ -582,14 +582,15 @@ export default function RightPanel({ sheetMode = false }) {
   return (
     <div style={{
       width: sheetMode ? '100%' : 'var(--panel-width)',
-      flexShrink: 0,
+      // In sheet mode: grow to fill available space and scroll within it
+      flex: sheetMode ? 1 : undefined,
+      flexShrink: sheetMode ? undefined : 0,
+      minHeight: sheetMode ? 0 : undefined,
       display: 'flex', flexDirection: 'column',
       borderLeft: sheetMode ? 'none' : '1px solid var(--border)',
       background: 'var(--bg-panel)',
       overflowY: 'auto', overflowX: 'hidden',
-      // iOS momentum scrolling
       WebkitOverflowScrolling: 'touch',
-      // Safe area padding for home indicator
       paddingBottom: sheetMode ? 'env(safe-area-inset-bottom, 0px)' : 0,
     }}>
 
