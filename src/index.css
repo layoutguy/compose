@@ -52,6 +52,8 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  /* iOS Safari: prevent bounce scroll that can misalign fixed sheets */
+  overscroll-behavior: none;
 }
 
 #root {
@@ -212,6 +214,18 @@ input {
 }
 
 @keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ─── Mobile sheet entrance ─────────────────────────────────────────────────── */
+
+@keyframes sheetSlideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes backdropIn {
   from { opacity: 0; }
   to   { opacity: 1; }
 }

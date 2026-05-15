@@ -20,8 +20,11 @@ const HANDLES = [
 
 // ─── Logo resize handles overlay ──────────────────────────────────────────────
 
-function LogoHandles({ rect, visible, onHandleMouseDown }) {
+function LogoHandles({ rect, visible, onHandleMouseDown, touch = false }) {
   if (!visible || !rect) return null
+  // On touch devices, use larger visible handles (12px) with a bigger invisible hit area
+  const visSize   = touch ? 12 : 8
+  const hitPad    = touch ? 14 : 0  // extra transparent padding around each handle
   return (
     <div style={{
       position: 'absolute',
@@ -38,19 +41,28 @@ function LogoHandles({ rect, visible, onHandleMouseDown }) {
         <div
           key={h.id}
           onMouseDown={e => { e.stopPropagation(); e.preventDefault(); onHandleMouseDown(h, e) }}
+          onTouchStart={e => { e.stopPropagation(); e.preventDefault(); onHandleMouseDown(h, { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }) }}
           style={{
             position: 'absolute',
             left: `${h.fx * 100}%`, top: `${h.fy * 100}%`,
             transform: 'translate(-50%, -50%)',
-            width: 8, height: 8,
+            // Hit area includes invisible padding for touch
+            width:  visSize + hitPad * 2,
+            height: visSize + hitPad * 2,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: h.cursor,
+            pointerEvents: 'all',
+          }}
+        >
+          <div style={{
+            width: visSize, height: visSize,
             border: '1.5px solid rgba(79,127,217,0.9)',
             background: '#0A0A0C',
             borderRadius: 2,
-            cursor: h.cursor,
-            pointerEvents: 'all',
             boxShadow: '0 1px 4px rgba(0,0,0,0.6)',
-          }}
-        />
+            flexShrink: 0,
+          }} />
+        </div>
       ))}
     </div>
   )
@@ -129,6 +141,10 @@ function DropOverlay() {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 const ACCEPTED_TYPES = new Set(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
+
+// Detect touch capability once (not reactive — device capability doesn't change)
+const isTouchDevice = typeof window !== 'undefined' &&
+  ('ontouchstart' in window || navigator.maxTouchPoints > 0)
 
 export default function CanvasArea() {
   const containerRef = useRef(null)
@@ -391,14 +407,14 @@ export default function CanvasArea() {
     setLogoParam('offsetY', snapped.offsetY)
   }, [display.showGuides]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Global mouse listeners for logo resize drag + logo body drag ──────────────
+  // ── Global mouse + touch listeners for logo resize drag + logo body drag ───────
   useEffect(() => {
-    const onMove = (e) => {
+    const handleMove = (clientX, clientY) => {
       // ── Resize handle drag ──────────────────────────────────────────────────
       const drag = resizeDragRef.current
       if (drag) {
-        const deltaX = e.clientX - drag.startX
-        const deltaY = e.clientY - drag.startY
+        const deltaX = clientX - drag.startX
+        const deltaY = clientY - drag.startY
         let rawDelta = 0
         if (drag.dx !== 0 && drag.dy !== 0) {
           rawDelta = (deltaX * drag.dx + deltaY * drag.dy) / 2
@@ -423,9 +439,9 @@ export default function CanvasArea() {
       // ── Logo body drag ──────────────────────────────────────────────────────
       const ld = logoDragRef.current
       if (!ld) return
-      const dx = e.clientX - ld.startX
-      const dy = e.clientY - ld.startY
-      if (!ld.moved && Math.abs(dx) + Math.abs(dy) > 2) {
+      const dx = clientX - ld.startX
+      const dy = clientY - ld.startY
+      if (!ld.moved && Math.abs(dx) + Math.abs(dy) > 3) {
         ld.moved = true
         logoDragMovedRef.current = true
       }
@@ -433,29 +449,42 @@ export default function CanvasArea() {
         const freeOffX = Math.round(ld.startOffsetX + dx / ld.fitScale)
         const freeOffY = Math.round(ld.startOffsetY + dy / ld.fitScale)
         if (displayRef.current.showGuides) {
-          // Snap mode — quantize to nearest grid dot
           const snapped = snapToNearestDot(freeOffX, freeOffY)
           setLogoParam('offsetX', snapped.offsetX)
           setLogoParam('offsetY', snapped.offsetY)
         } else {
-          // Free placement
           setLogoParam('offsetX', freeOffX)
           setLogoParam('offsetY', freeOffY)
         }
       }
     }
+
+    const onMouseMove = (e) => handleMove(e.clientX, e.clientY)
+
+    const onTouchMove = (e) => {
+      if (e.touches.length !== 1) return
+      // Prevent page scroll while dragging logo
+      if (resizeDragRef.current || logoDragRef.current) e.preventDefault()
+      const t = e.touches[0]
+      handleMove(t.clientX, t.clientY)
+    }
+
     const onUp = () => {
       resizeDragRef.current = null
       logoDragRef.current   = null
-      // cursor update handled by mousemove; logoDragMovedRef cleared in click handler
     }
-    document.addEventListener('mousemove', onMove)
+
+    document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup',   onUp)
+    document.addEventListener('touchmove', onTouchMove, { passive: false })
+    document.addEventListener('touchend',  onUp)
     return () => {
-      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup',   onUp)
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('touchend',  onUp)
     }
-  }, [setLogoParam])
+  }, [setLogoParam, snapToNearestDot])
 
   const handleHandleMouseDown = useCallback((handle, e) => {
     if (!logoRect) return
@@ -472,6 +501,19 @@ export default function CanvasArea() {
     }
   }, [logoRect, logo.sizeDots])
 
+  // ── Shared drag start — used by both mouse and touch ─────────────────────────
+  const startLogoDrag = useCallback((clientX, clientY) => {
+    logoDragMovedRef.current = false
+    logoDragRef.current = {
+      startX:       clientX,
+      startY:       clientY,
+      startOffsetX: logoRef.current.offsetX,
+      startOffsetY: logoRef.current.offsetY,
+      fitScale:     logoRect.fitScale,
+      moved:        false,
+    }
+  }, [logoRect])
+
   // ── Canvas mousedown — start logo body drag ──────────────────────────────────
   const handleCanvasMouseDown = useCallback((e) => {
     if (!logoRect || !logoSelected) return
@@ -484,16 +526,31 @@ export default function CanvasArea() {
                    cssY >= logoRect.y && cssY <= logoRect.y + logoRect.h
     if (!inside) return
     e.preventDefault()
-    logoDragMovedRef.current = false
-    logoDragRef.current = {
-      startX:       e.clientX,
-      startY:       e.clientY,
-      startOffsetX: logoRef.current.offsetX,
-      startOffsetY: logoRef.current.offsetY,
-      fitScale:     logoRect.fitScale,
-      moved:        false,
-    }
-  }, [logoRect, logoSelected])
+    startLogoDrag(e.clientX, e.clientY)
+  }, [logoRect, logoSelected, startLogoDrag])
+
+  // ── Canvas touchstart — tap to select logo, drag to move ─────────────────────
+  const handleCanvasTouchStart = useCallback((e) => {
+    if (e.touches.length !== 1) return
+    const touch   = e.touches[0]
+    const canvasEl = canvasRef.current
+    if (!canvasEl) return
+    const rect  = canvasEl.getBoundingClientRect()
+    const cssX  = touch.clientX - rect.left
+    const cssY  = touch.clientY - rect.top
+
+    if (!logoRect) { setLogoSelected(false); return }
+
+    const inside = cssX >= logoRect.x && cssX <= logoRect.x + logoRect.w &&
+                   cssY >= logoRect.y && cssY <= logoRect.y + logoRect.h
+
+    if (!inside) { setLogoSelected(false); return }
+
+    // Tap/drag on logo — select it and start drag
+    e.preventDefault()
+    setLogoSelected(true)
+    startLogoDrag(touch.clientX, touch.clientY)
+  }, [logoRect, startLogoDrag])
 
   // ── Canvas mousemove — update cursor when hovering logo body ─────────────────
   const handleCanvasMouseMove = useCallback((e) => {
@@ -570,8 +627,10 @@ export default function CanvasArea() {
           onClick={handleCanvasClick}
           onMouseDown={handleCanvasMouseDown}
           onMouseMove={handleCanvasMouseMove}
+          onTouchStart={handleCanvasTouchStart}
           style={{
             display: 'block',
+            touchAction: 'none',   // prevent browser scroll/zoom while interacting with canvas
             // React owns these — they are the artboard frame dimensions.
             // Changed whenever outputW/H or zoom changes, BEFORE drawing.
             width:  frameW > 0 ? frameW  : undefined,
@@ -592,6 +651,7 @@ export default function CanvasArea() {
           rect={logoRect}
           visible={logoSelected && !!logoRect}
           onHandleMouseDown={handleHandleMouseDown}
+          touch={isTouchDevice}
         />
 
 

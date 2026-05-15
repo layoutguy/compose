@@ -95,7 +95,6 @@ function IconBtn({ children, onClick, title, disabled }) {
 function PositionPopup({ selected, onSelect, onClose }) {
   return (
     <div
-      onMouseLeave={onClose}
       style={{
         position: 'absolute', bottom: 'calc(100% + 10px)', left: '50%',
         transform: 'translateX(-50%)',
@@ -151,7 +150,9 @@ export default function BottomToolbar() {
 
   return (
     <div style={{
-      position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+      position: 'absolute',
+      bottom: 'max(24px, calc(env(safe-area-inset-bottom, 0px) + 12px))',
+      left: '50%', transform: 'translateX(-50%)',
       zIndex: 30, pointerEvents: 'none',
     }}>
       <div style={{
@@ -273,11 +274,21 @@ export default function BottomToolbar() {
               </ToolbarBtn>
 
               {posOpen && (
-                <PositionPopup
-                  selected={logo.position}
-                  onSelect={v => setLogoParam('position', v)}
-                  onClose={() => setPosOpen(false)}
-                />
+                <>
+                  {/* Invisible backdrop — closes popup on click/tap outside */}
+                  <div
+                    onMouseDown={() => setPosOpen(false)}
+                    onTouchStart={() => setPosOpen(false)}
+                    style={{ position: 'fixed', inset: 0, zIndex: 45 }}
+                  />
+                  <div style={{ position: 'relative', zIndex: 50 }}>
+                    <PositionPopup
+                      selected={logo.position}
+                      onSelect={v => setLogoParam('position', v)}
+                      onClose={() => setPosOpen(false)}
+                    />
+                  </div>
+                </>
               )}
             </div>
           </>

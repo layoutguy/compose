@@ -523,7 +523,7 @@ function IntegrityRow({ label, value }) {
 
 // ─── Panel ────────────────────────────────────────────────────────────────────
 
-export default function RightPanel() {
+export default function RightPanel({ sheetMode = false }) {
   const {
     grid,     setGridParam,
     dot,      setDotParam,
@@ -581,11 +581,16 @@ export default function RightPanel() {
 
   return (
     <div style={{
-      width: 'var(--panel-width)', flexShrink: 0,
+      width: sheetMode ? '100%' : 'var(--panel-width)',
+      flexShrink: 0,
       display: 'flex', flexDirection: 'column',
-      borderLeft: '1px solid var(--border)',
+      borderLeft: sheetMode ? 'none' : '1px solid var(--border)',
       background: 'var(--bg-panel)',
       overflowY: 'auto', overflowX: 'hidden',
+      // iOS momentum scrolling
+      WebkitOverflowScrolling: 'touch',
+      // Safe area padding for home indicator
+      paddingBottom: sheetMode ? 'env(safe-area-inset-bottom, 0px)' : 0,
     }}>
 
       {/* ══ 1. ARTBOARD SIZE ══ */}
