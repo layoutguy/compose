@@ -76,16 +76,9 @@ export default function StatusBar() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
 
         {/* Logo indicator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <div style={{
-            width: 5, height: 5, borderRadius: '50%',
-            background: logo.url ? 'var(--accent-green)' : 'rgba(255,255,255,0.15)',
-            transition: 'background 0.2s',
-          }} />
-          <span style={{ fontSize: 11, color: logo.url ? 'var(--text-secondary)' : 'var(--text-tertiary)' }}>
-            {logo.name ?? 'No logo'}
-          </span>
-        </div>
+        <span style={{ fontSize: 11, color: logo.url ? 'var(--text-secondary)' : 'var(--text-tertiary)' }}>
+          {logo.name ?? 'No logo'}
+        </span>
 
         <Pipe />
 
