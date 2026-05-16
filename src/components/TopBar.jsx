@@ -43,64 +43,7 @@ const PanelIcon = () => (
   </svg>
 )
 
-const DiceIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style={{ display: 'block', marginLeft: 2, marginTop: -1 }}>
-    <rect x="1" y="1" width="13" height="13" rx="2.5" stroke="currentColor" strokeWidth="1.2"/>
-    <circle cx="4.5" cy="4.5" r="1" fill="currentColor"/>
-    <circle cx="10.5" cy="4.5" r="1" fill="currentColor"/>
-    <circle cx="7.5" cy="7.5" r="1" fill="currentColor"/>
-    <circle cx="4.5" cy="10.5" r="1" fill="currentColor"/>
-    <circle cx="10.5" cy="10.5" r="1" fill="currentColor"/>
-  </svg>
-)
-
-const SHAPES    = ['square', 'circle', 'diamond']
-const POSITIONS = ['top-left','top-center','top-right','mid-left','mid-center','mid-right','bot-left','bot-center','bot-right']
-
-function rInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min }
-function rFrom(arr)     { return arr[Math.floor(Math.random() * arr.length)] }
-
-import { useComposition } from '../hooks/useComposition'
-import { triggerTransition } from '../hooks/useCanvasTransition'
-import { computeGridLayout } from '../canvas/grid'
-
 export default function TopBar({ isMobile = false, panelOpen = false, onTogglePanel }) {
-  const { setGridParam, setDotParam, setLogoParam, logo, advanced } = useComposition()
-
-  const handleShuffle = () => {
-    triggerTransition(() => {
-      const outW   = advanced.outputW
-      const outH   = advanced.outputH
-      const margin = rInt(60, 220)
-      const cols   = rInt(6, 28)
-
-      // Derive rows that gives excellent square integrity:
-      // sx = availW/(cols-1), sy = availH/(rows-1) → set sx=sy → solve for rows
-      const availW    = outW - 2 * margin
-      const availH    = outH - 2 * margin
-      let   idealRows = Math.max(2, Math.round((cols - 1) * availH / availW) + 1)
-
-      // Scan ±2 around the ideal to pick the one with best relDiff
-      let bestRows = idealRows, bestRel = Infinity
-      for (let r = Math.max(2, idealRows - 2); r <= idealRows + 2; r++) {
-        const l = computeGridLayout({ cols, rows: r, margin }, { outputW: outW, outputH: outH })
-        if (l.relDiff < bestRel) { bestRel = l.relDiff; bestRows = r }
-      }
-
-      setGridParam('cols',    cols)
-      setGridParam('rows',    bestRows)
-      setGridParam('margin',  margin)
-      setDotParam('size',    rInt(2, 9))
-      setDotParam('shape',   rFrom(SHAPES))
-      setDotParam('opacity', Math.round((0.5 + Math.random() * 0.5) * 100) / 100)
-      if (logo.url) {
-        setLogoParam('position', rFrom(POSITIONS))
-        setLogoParam('sizeDots', rInt(1, 6))
-        setLogoParam('offsetX',  0)
-        setLogoParam('offsetY',  0)
-      }
-    })
-  }
   return (
     <div style={{
       height: 'var(--topbar-height)',
@@ -118,28 +61,6 @@ export default function TopBar({ isMobile = false, panelOpen = false, onTogglePa
 
       {/* Right */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-
-        {/* Shuffle button — always visible */}
-        <button
-          onClick={handleShuffle}
-          title="Shuffle — randomise grid, dots and logo"
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 34, height: 34,
-            borderRadius: 'var(--radius-md)',
-            background: '#4F7FD9',
-            border: '1px solid #6E9AE8',
-            color: '#fff',
-            boxShadow: '0 0 12px rgba(79,127,217,0.45)',
-            transition: 'background 140ms, box-shadow 140ms, transform 120ms',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = '#6090E4'; e.currentTarget.style.boxShadow = '0 0 20px rgba(79,127,217,0.6)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = '#4F7FD9'; e.currentTarget.style.boxShadow = '0 0 12px rgba(79,127,217,0.45)' }}
-          onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.92) rotate(20deg)' }}
-          onMouseUp={e => { e.currentTarget.style.transform = 'scale(1) rotate(0deg)' }}
-        >
-          <DiceIcon />
-        </button>
 
         {/* Panel toggle (mobile) or Live Preview badge (desktop) */}
         {isMobile ? (
