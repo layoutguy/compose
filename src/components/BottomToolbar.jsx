@@ -364,10 +364,10 @@ export default function BottomToolbar() {
           pointerEvents: 'all',
           transition: 'background 140ms, transform 120ms',
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#6090E4' }}
-        onMouseLeave={e => { e.currentTarget.style.background = '#4F7FD9' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#6090E4'; e.currentTarget.style.transform = 'scale(1.08)' }}
+        onMouseLeave={e => { e.currentTarget.style.background = '#4F7FD9'; e.currentTarget.style.transform = 'scale(1)' }}
         onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.88) rotate(20deg)' }}
-        onMouseUp={e => { e.currentTarget.style.transform = 'scale(1) rotate(0deg)' }}
+        onMouseUp={e => { e.currentTarget.style.transform = 'scale(1.08) rotate(0deg)' }}
       >
         <DiceIcon />
       </button>
