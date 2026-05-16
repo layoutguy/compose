@@ -946,14 +946,15 @@ export default function RightPanel({ sheetMode = false }) {
                 </button>
                 {/* Color swatch — activates tint */}
                 <div style={{ flex: 1, position: 'relative', height: 32, borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: logo.tintColor ? '1px solid rgba(0,87,200,0.6)' : '1px solid var(--border-input)' }}>
-                  <div style={{ position: 'absolute', inset: 0, background: logo.tintColor ?? '#FFFFFF', transition: 'background 120ms' }} />
+                  <div style={{ position: 'absolute', inset: 0, background: logo.tintColor ?? 'var(--bg-input)', transition: 'background 120ms' }} />
                   <div style={{
                     position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', paddingLeft: 10,
                     fontSize: 11, fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase',
-                    color: hexContrast(logo.tintColor ?? '#FFFFFF'), pointerEvents: 'none', userSelect: 'none',
+                    color: logo.tintColor ? hexContrast(logo.tintColor) : 'var(--text-tertiary)',
+                    pointerEvents: 'none', userSelect: 'none',
                     transition: 'color 120ms',
                   }}>
-                    {logo.tintColor ?? '#FFFFFF'}
+                    {logo.tintColor ?? 'Pick colour'}
                   </div>
                   <input
                     type="color"
