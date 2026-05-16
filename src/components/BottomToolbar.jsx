@@ -40,7 +40,7 @@ const PlusIcon = () => (
 )
 
 const DiceIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 15 15" fill="none" style={{ display: 'block', marginLeft: 0, marginTop: -1 }}>
+  <svg width="18" height="18" viewBox="0 0 15 15" fill="none" style={{ display: 'block', marginLeft: 0, marginTop: -1, transition: 'transform 150ms cubic-bezier(0.25,0,0,1)' }}>
     <rect x="1" y="1" width="13" height="13" rx="2.5" stroke="currentColor" strokeWidth="1.2"/>
     <circle cx="4.5" cy="4.5" r="1" fill="currentColor"/>
     <circle cx="10.5" cy="4.5" r="1" fill="currentColor"/>
@@ -364,10 +364,10 @@ export default function BottomToolbar() {
           pointerEvents: 'all',
           transition: 'background 140ms, transform 120ms',
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#6090E4'; e.currentTarget.style.transform = 'scale(1.08)' }}
-        onMouseLeave={e => { e.currentTarget.style.background = '#4F7FD9'; e.currentTarget.style.transform = 'scale(1)' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#6090E4'; e.currentTarget.querySelector('svg').style.transform = 'scale(1.18)' }}
+        onMouseLeave={e => { e.currentTarget.style.background = '#4F7FD9'; e.currentTarget.querySelector('svg').style.transform = 'scale(1)' }}
         onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.88) rotate(20deg)' }}
-        onMouseUp={e => { e.currentTarget.style.transform = 'scale(1.08) rotate(0deg)' }}
+        onMouseUp={e => { e.currentTarget.style.transform = 'scale(1) rotate(0deg)' }}
       >
         <DiceIcon />
       </button>
