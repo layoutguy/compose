@@ -118,6 +118,8 @@ export default function TopBar({ isMobile = false, panelOpen = false, onTogglePa
           </div>
           <Pipe />
           <Stat label="Margin" value={`${grid.margin}px`} />
+          <Pipe />
+          <Stat value={`${advanced.outputW} × ${advanced.outputH}`} muted />
           {!display?.showDots && (
             <>
               <Pipe />

@@ -773,7 +773,6 @@ export default function CanvasArea() {
     >
       {/* Canvas wrapper — sized by React to match the artboard frame exactly */}
       <div ref={wrapperRef} style={{ position: 'relative', flexShrink: 0 }}>
-        <DimensionLabel w={advanced.outputW} h={advanced.outputH} />
 
         <canvas
           ref={canvasRef}
