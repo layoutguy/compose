@@ -142,7 +142,15 @@ function OffsetInput({ axis, value, onChange }) {
     }}>
       <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-tertiary)', letterSpacing: '0.04em', flexShrink: 0 }}>{axis}</span>
       <input value={draft} onChange={e => setDraft(e.target.value)}
-        onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') { commit(); e.currentTarget.blur() } }}
+        onBlur={commit} onKeyDown={e => {
+          if (e.key === 'Enter') { commit(); e.currentTarget.blur() }
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault()
+            const n = parseInt(draft, 10)
+            const next = (isNaN(n) ? 0 : n) + (e.key === 'ArrowUp' ? 1 : -1)
+            const s = String(next); setDraft(s); onChange?.(next)
+          }
+        }}
         style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none', fontSize: 12, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }} />
       <span style={{ fontSize: 10, color: 'var(--text-tertiary)', flexShrink: 0 }}>px</span>
     </div>
@@ -165,7 +173,15 @@ function NumberInput({ axis, value, onChange, unit = '' }) {
     }}>
       <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-tertiary)', letterSpacing: '0.04em', flexShrink: 0 }}>{axis}</span>
       <input value={draft} onChange={e => setDraft(e.target.value)}
-        onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') { commit(); e.currentTarget.blur() } }}
+        onBlur={commit} onKeyDown={e => {
+          if (e.key === 'Enter') { commit(); e.currentTarget.blur() }
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault()
+            const n = parseInt(draft, 10)
+            const next = Math.max(1, (isNaN(n) ? 1 : n) + (e.key === 'ArrowUp' ? 1 : -1))
+            const s = String(next); setDraft(s); onChange?.(next)
+          }
+        }}
         style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none', fontSize: 12, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }} />
       {unit && <span style={{ fontSize: 10, color: 'var(--text-tertiary)', flexShrink: 0 }}>{unit}</span>}
     </div>
@@ -264,7 +280,16 @@ function ArtboardDimInput({ axis, value, onChange }) {
         onChange={handleChange}
         onFocus={e => { setFocused(true); e.currentTarget.select() }}
         onBlur={commit}
-        onKeyDown={e => { if (e.key === 'Enter') { commit(); e.currentTarget.blur() } }}
+        onKeyDown={e => {
+          if (e.key === 'Enter') { commit(); e.currentTarget.blur() }
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault()
+            const n = parseInt(draft, 10)
+            const step = e.shiftKey ? 100 : e.altKey ? 10 : 1
+            const next = Math.max(1, Math.min(32000, (isNaN(n) ? 1 : n) + (e.key === 'ArrowUp' ? step : -step)))
+            setDraft(String(next)); apply(next)
+          }
+        }}
         style={{
           flex: 1, minWidth: 0,
           background: 'none', border: 'none', outline: 'none',
@@ -371,7 +396,15 @@ function ScrubInput({ label, value, onChange, min = 0, max = 9999, step = 1, uni
         onChange={handleChange}
         onFocus={e => { setFocused(true); e.currentTarget.select() }}
         onBlur={commit}
-        onKeyDown={e => { if (e.key === 'Enter') { commit(); e.currentTarget.blur() } }}
+        onKeyDown={e => {
+          if (e.key === 'Enter') { commit(); e.currentTarget.blur() }
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault()
+            const n = parseFloat(draft)
+            const next = (isNaN(n) ? 0 : n) + (e.key === 'ArrowUp' ? step : -step)
+            apply(next)
+          }
+        }}
         style={{
           flex: 1, minWidth: 0, padding: '0 8px',
           background: 'none', border: 'none', outline: 'none',
