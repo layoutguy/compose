@@ -63,11 +63,16 @@ export function computeGridLayout({ cols, rows, margin }, dims = {}) {
   const canEval = c > 1 && r > 1
   const diff    = canEval ? Math.abs(sx - sy) : 0
 
+  // Use a relative threshold: diff as a fraction of average spacing.
+  // This makes the rating scale-aware — a 9px diff on 300px spacing cells
+  // is far more "square" than a 9px diff on 20px spacing cells.
   let integrity = 'n/a'
   if (canEval) {
-    if (diff <= 5)  integrity = 'excellent'
-    else if (diff <= 20) integrity = 'acceptable'
-    else            integrity = 'poor'
+    const avgSpacing = (sx + sy) / 2
+    const relDiff = diff / avgSpacing   // 0 = perfect square, 1 = wildly off
+    if      (relDiff <= 0.06) integrity = 'excellent'
+    else if (relDiff <= 0.15) integrity = 'acceptable'
+    else                      integrity = 'poor'
   }
 
   return {
