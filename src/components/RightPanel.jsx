@@ -4,6 +4,7 @@ import PositionPicker from './ui/PositionPicker'
 import ShapePicker from './ui/ShapePicker'
 import { useComposition } from '../hooks/useComposition'
 import { computeGridLayout, findIntegritySuggestion } from '../canvas/grid'
+import { triggerTransition } from '../hooks/useCanvasTransition'
 import { renderExportCanvas } from '../export/renderExportCanvas'
 import {
   exportAsPNG, exportAsJPG, exportAsWEBP, exportAsPDF, exportAsSVG,
@@ -126,36 +127,6 @@ function SliderRow({ label, displayValue, min, max, step = 1, value, onChange, c
   )
 }
 
-function OffsetInput({ axis, value, onChange }) {
-  const [draft, setDraft] = useState(String(value))
-  const liveRef = useRef(value)
-  useEffect(() => { liveRef.current = value; setDraft(String(value)) }, [value])
-  const commit = () => {
-    const n = parseInt(draft, 10)
-    if (!isNaN(n)) onChange?.(n); else setDraft(String(value))
-  }
-  return (
-    <div style={{
-      flex: 1, display: 'flex', alignItems: 'center', gap: 7,
-      height: 32, padding: '0 10px',
-      border: '1px solid var(--border-input)', borderRadius: 'var(--radius-sm)',
-      background: 'var(--bg-input)',
-    }}>
-      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-tertiary)', letterSpacing: '0.04em', flexShrink: 0 }}>{axis}</span>
-      <input value={draft} onChange={e => setDraft(e.target.value)}
-        onBlur={commit} onKeyDown={e => {
-          if (e.key === 'Enter') { commit(); e.currentTarget.blur() }
-          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-            e.preventDefault()
-            const next = liveRef.current + (e.key === 'ArrowUp' ? 1 : -1)
-            liveRef.current = next; setDraft(String(next)); onChange?.(next)
-          }
-        }}
-        style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none', fontSize: 12, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }} />
-      <span style={{ fontSize: 10, color: 'var(--text-tertiary)', flexShrink: 0 }}>px</span>
-    </div>
-  )
-}
 
 function NumberInput({ axis, value, onChange, unit = '' }) {
   const [draft, setDraft] = useState(String(value))
@@ -401,9 +372,12 @@ function ScrubInput({ label, value, onChange, min = 0, max = 9999, step = 1, uni
           if (e.key === 'Enter') { commit(); e.currentTarget.blur() }
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             e.preventDefault()
-            const next = liveRef.current + (e.key === 'ArrowUp' ? step : -step)
-            liveRef.current = Math.max(min, Math.min(max, next))
-            apply(next)
+            const next    = liveRef.current + (e.key === 'ArrowUp' ? step : -step)
+            const clamped = Math.max(min, Math.min(max, next))
+            liveRef.current = clamped
+            const decimals  = step < 1 ? (String(step).split('.')[1]?.length ?? 0) : 0
+            setDraft(parseFloat(clamped.toFixed(decimals)).toString())
+            apply(clamped)
           }
         }}
         style={{
@@ -493,7 +467,7 @@ const INTEGRITY_LABELS = {
   'n/a':      '—',
 }
 
-function GridIntegrity({ layout, suggestion, onApplySuggestion }) {
+function GridIntegrity({ layout }) {
   const { spacingX, spacingY, diff, integrity, dotCount } = layout
   const color = INTEGRITY_COLORS[integrity] ?? 'var(--text-tertiary)'
   const label = INTEGRITY_LABELS[integrity] ?? '—'
@@ -507,28 +481,46 @@ function GridIntegrity({ layout, suggestion, onApplySuggestion }) {
       overflow: 'hidden',
     }}>
 
-      {/* Interval rows */}
+      {/* Metrics — two paired rows */}
       {showMetrics && (
         <>
-          <IntegrityRow label="H Interval" value={`${Math.round(spacingX)}px`} />
-          <IntegrityRow label="V Interval" value={`${Math.round(spacingY)}px`} />
-          <IntegrityRow label="Difference" value={`${diff}px`} />
+          {/* Row 1: H Interval + V Interval */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 11px', borderRight: '1px solid var(--border)' }}>
+              <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>H Interval</span>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>{Math.round(spacingX)}px</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 11px' }}>
+              <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>V Interval</span>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>{Math.round(spacingY)}px</span>
+            </div>
+          </div>
+
+          {/* Row 2: Difference + Total dots */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 11px', borderRight: '1px solid var(--border)' }}>
+              <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>Difference</span>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>{diff}px</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 11px' }}>
+              <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>Total dots</span>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>{dotCount}</span>
+            </div>
+          </div>
         </>
       )}
 
-      {/* Integrity status — always visible */}
+      {/* Square Integrity status */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: '7px 11px',
         background: showMetrics ? `color-mix(in srgb, ${color} 6%, transparent)` : 'transparent',
-        borderTop: showMetrics ? '1px solid var(--border)' : 'none',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {showMetrics && (
             <div style={{
               width: 5, height: 5, borderRadius: '50%',
-              background: color,
-              boxShadow: `0 0 6px ${color}`,
+              background: color, boxShadow: `0 0 6px ${color}`,
               flexShrink: 0,
             }} />
           )}
@@ -539,67 +531,73 @@ function GridIntegrity({ layout, suggestion, onApplySuggestion }) {
         </span>
       </div>
 
-      {/* Dot count */}
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '7px 11px',
-        borderTop: '1px solid var(--border)',
-      }}>
-        <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>Total dots</span>
-        <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
-          {dotCount}
-        </span>
-      </div>
-
-      {/* Suggestion chip */}
-      {suggestion && (
-        <button
-          onClick={() => onApplySuggestion?.(suggestion.axis, suggestion.value)}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '7px 11px',
-            borderTop: '1px solid var(--border)',
-            background: 'rgba(79,127,217,0.06)',
-            cursor: 'pointer',
-            textAlign: 'left',
-            transition: 'background 120ms',
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(79,127,217,0.12)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'rgba(79,127,217,0.06)'}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ fontSize: 10, color: 'var(--accent-blue)', opacity: 0.7 }}>✦</span>
-            <span style={{ fontSize: 11, color: 'var(--accent-blue)' }}>
-              Try {suggestion.axis === 'cols' ? 'columns' : 'rows'} → {suggestion.value}
-            </span>
-          </div>
-          <span style={{
-            fontSize: 10, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase',
-            color: INTEGRITY_COLORS[suggestion.integrity],
-          }}>
-            {INTEGRITY_LABELS[suggestion.integrity]} · {suggestion.diff}px
-          </span>
-        </button>
-      )}
-
     </div>
   )
 }
 
-function IntegrityRow({ label, value }) {
+function SuggestionHint({ suggestion, grid, onApply }) {
+  const [hovered, setHovered] = useState(false)
+  if (!suggestion) return null
+
+  const axisLabel  = suggestion.axis === 'cols' ? 'Columns' : 'Rows'
+  const fromVal    = suggestion.axis === 'cols' ? grid.cols : grid.rows
+  const color      = INTEGRITY_COLORS[suggestion.integrity] ?? 'var(--text-tertiary)'
+  const intLabel   = INTEGRITY_LABELS[suggestion.integrity] ?? ''
+
   return (
     <div style={{
-      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      padding: '7px 11px',
-      borderBottom: '1px solid var(--border)',
+      display: 'flex', alignItems: 'stretch',
+      border: '1px solid var(--border)',
+      borderRadius: 'var(--radius-sm)',
+      overflow: 'hidden',
     }}>
-      <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{label}</span>
-      <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
-        {value}
-      </span>
+      {/* Left accent bar */}
+      <div style={{ width: 3, flexShrink: 0, background: color, opacity: 0.7 }} />
+
+      {/* Body */}
+      <div style={{
+        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: 8, padding: '8px 10px',
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>
+            Suggestion
+          </span>
+          <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
+            {axisLabel} {fromVal} → <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{suggestion.value}</span>
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          {/* Integrity improvement label */}
+          <span style={{ fontSize: 10, fontWeight: 600, color, letterSpacing: '0.04em' }}>
+            {intLabel}
+          </span>
+
+          {/* Apply pill */}
+          <button
+            onClick={() => onApply(suggestion.axis, suggestion.value)}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            style={{
+              height: 24, padding: '0 10px',
+              borderRadius: 99,
+              background: hovered ? 'rgba(255,255,255,0.13)' : 'rgba(255,255,255,0.08)',
+              border: `1px solid ${hovered ? 'rgba(255,255,255,0.24)' : 'rgba(255,255,255,0.15)'}`,
+              fontSize: 10, fontWeight: 600, letterSpacing: '0.04em',
+              color: hovered ? 'var(--text-primary)' : 'rgba(255,255,255,0.75)',
+              cursor: 'pointer',
+              transition: 'background 120ms, border-color 120ms, color 120ms',
+            }}
+          >
+            Apply
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
+
 
 // ─── Panel ────────────────────────────────────────────────────────────────────
 
@@ -617,6 +615,8 @@ export default function RightPanel({ sheetMode = false }) {
 
   const [isExporting, setIsExporting] = useState(false)
   const [exportDone,  setExportDone]  = useState(false)
+  const [isCopying,   setIsCopying]   = useState(false)
+  const [copyDone,    setCopyDone]    = useState(false)
 
   const handleExport = useCallback(async () => {
     if (isExporting) return
@@ -645,6 +645,29 @@ export default function RightPanel({ sheetMode = false }) {
       setIsExporting(false)
     }
   }, [isExporting, xport, grid, dot, logo, advanced])
+
+  const handleCopy = useCallback(async () => {
+    if (isCopying) return
+    setIsCopying(true); setCopyDone(false)
+    await new Promise(r => setTimeout(r, 60))
+    try {
+      const canvas = await renderExportCanvas(grid, dot, logo, xport.scale, advanced, true)
+      canvas.toBlob(async (blob) => {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+          setCopyDone(true)
+          setTimeout(() => setCopyDone(false), 2000)
+        } catch (err) {
+          console.error('Clipboard write failed:', err)
+        } finally {
+          setIsCopying(false)
+        }
+      }, 'image/png')
+    } catch (err) {
+      console.error('Copy render failed:', err)
+      setIsCopying(false)
+    }
+  }, [isCopying, grid, dot, logo, xport.scale, advanced])
 
   const logoFileRef = useRef(null)
   const bgFileRef   = useRef(null)
@@ -807,11 +830,14 @@ export default function RightPanel({ sheetMode = false }) {
         <ScrubInput label="Rows"    value={grid.rows}   onChange={v => setGridParam('rows', Math.max(1, v))}   min={1} max={30}  step={1} dragMultiplier={0.18} />
         <ScrubInput label="Margin"  value={grid.margin} onChange={v => setGridParam('margin', v)} min={0} max={500} step={1} unit="px" dragMultiplier={1.2} />
 
-        {/* Square integrity — with optional improvement suggestion */}
-        <GridIntegrity
-          layout={layout}
+        {/* Square integrity */}
+        <GridIntegrity layout={layout} />
+
+        {/* One-click improvement suggestion */}
+        <SuggestionHint
           suggestion={suggestion}
-          onApplySuggestion={(axis, value) => setGridParam(axis, value)}
+          grid={grid}
+          onApply={(axis, value) => triggerTransition(() => setGridParam(axis, value))}
         />
 
       </div>}
@@ -885,20 +911,54 @@ export default function RightPanel({ sheetMode = false }) {
               </span>
             </div>
 
+            {/* Tint color */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <span style={labelStyle}>Color</span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {/* Original toggle */}
+                <button
+                  onClick={() => setLogoParam('tintColor', null)}
+                  style={{
+                    height: 32, padding: '0 12px', flexShrink: 0,
+                    borderRadius: 'var(--radius-sm)',
+                    border: !logo.tintColor ? '1px solid rgba(79,127,217,0.6)' : '1px solid var(--border-input)',
+                    background: !logo.tintColor ? 'rgba(79,127,217,0.12)' : 'var(--bg-input)',
+                    fontSize: 11, fontWeight: !logo.tintColor ? 600 : 400,
+                    color: !logo.tintColor ? 'var(--accent-blue)' : 'rgba(255,255,255,0.45)',
+                    cursor: 'pointer',
+                    transition: 'all 0.1s',
+                  }}
+                  onMouseEnter={e => { if (logo.tintColor) { e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; e.currentTarget.style.background = 'var(--bg-hover)' } }}
+                  onMouseLeave={e => { if (logo.tintColor) { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; e.currentTarget.style.background = 'var(--bg-input)' } }}
+                >
+                  Original
+                </button>
+                {/* Color swatch — activates tint */}
+                <div style={{ flex: 1, position: 'relative', height: 32, borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: logo.tintColor ? '1px solid rgba(79,127,217,0.6)' : '1px solid var(--border-input)' }}>
+                  <div style={{ position: 'absolute', inset: 0, background: logo.tintColor ?? '#FFFFFF', transition: 'background 120ms' }} />
+                  <div style={{
+                    position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', paddingLeft: 10,
+                    fontSize: 11, fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase',
+                    color: 'rgba(0,0,0,0.4)', pointerEvents: 'none', userSelect: 'none',
+                  }}>
+                    {logo.tintColor ?? '#FFFFFF'}
+                  </div>
+                  <input
+                    type="color"
+                    value={logo.tintColor ?? '#FFFFFF'}
+                    onChange={e => setLogoParam('tintColor', e.target.value)}
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', border: 'none' }}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Position */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <span style={labelStyle}>Position</span>
               <PositionPicker selected={logo.position} onSelect={v => setLogoParam('position', v)} />
             </div>
 
-            {/* Offset */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <span style={labelStyle}>Offset</span>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <OffsetInput axis="X" value={logo.offsetX} onChange={v => setLogoParam('offsetX', v)} />
-                <OffsetInput axis="Y" value={logo.offsetY} onChange={v => setLogoParam('offsetY', v)} />
-              </div>
-            </div>
           </>
         )}
 
@@ -1002,22 +1062,48 @@ export default function RightPanel({ sheetMode = false }) {
           </span>
         </div>
 
-        <button onClick={handleExport} disabled={isExporting} style={{
-          width: '100%', height: 40,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-          borderRadius: 'var(--radius-sm)',
-          background: exportDone ? 'rgba(42,122,74,0.85)' : isExporting ? 'rgba(226,217,194,0.55)' : 'var(--export-bg)',
-          color: exportDone ? '#d4f0e0' : 'var(--export-text)',
-          fontSize: 11, fontWeight: 600, letterSpacing: '0.09em', textTransform: 'uppercase',
-          transition: 'background 220ms cubic-bezier(0.25,0,0,1), color 220ms cubic-bezier(0.25,0,0,1), transform 80ms cubic-bezier(0.25,0,0,1), opacity 140ms cubic-bezier(0.25,0,0,1)',
-          opacity: isExporting ? 0.65 : 1, cursor: isExporting ? 'default' : 'pointer',
-        }}
-          onMouseEnter={e => { if (!isExporting && !exportDone) e.currentTarget.style.opacity = '0.84' }}
-          onMouseLeave={e => { if (!isExporting && !exportDone) e.currentTarget.style.opacity = '1' }}
-          onMouseDown={e => { if (!isExporting) e.currentTarget.style.transform = 'scale(0.978) translateY(1px)' }}
-          onMouseUp={e => { e.currentTarget.style.transform = 'scale(1) translateY(0)' }}>
-          {exportDone ? '✓ Saved' : isExporting ? 'Exporting…' : <><span>Export</span><ArrowUpRight /></>}
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {/* Copy to clipboard */}
+          <button onClick={handleCopy} disabled={isCopying} title="Copy as PNG" style={{
+            flex: '0 0 auto', width: 40, height: 40,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            borderRadius: 'var(--radius-sm)',
+            background: copyDone ? 'rgba(42,122,74,0.85)' : 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.10)',
+            color: copyDone ? '#d4f0e0' : 'rgba(255,255,255,0.65)',
+            transition: 'background 220ms, color 220ms, opacity 140ms',
+            opacity: isCopying ? 0.5 : 1,
+            cursor: isCopying ? 'default' : 'pointer',
+          }}
+            onMouseEnter={e => { if (!isCopying && !copyDone) { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; e.currentTarget.style.color = '#fff' } }}
+            onMouseLeave={e => { if (!isCopying && !copyDone) { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)' } }}>
+            {copyDone
+              ? <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7l3 3 6-6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              : <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <rect x="5" y="1" width="8" height="9" rx="1.2" stroke="currentColor" strokeWidth="1.1"/>
+                  <path d="M9 10v2a1 1 0 01-1 1H2a1 1 0 01-1-1V5a1 1 0 011-1h2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                </svg>
+            }
+          </button>
+
+          {/* Export */}
+          <button onClick={handleExport} disabled={isExporting} style={{
+            flex: 1, height: 40,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+            borderRadius: 'var(--radius-sm)',
+            background: exportDone ? 'rgba(42,122,74,0.85)' : isExporting ? 'rgba(226,217,194,0.55)' : 'var(--export-bg)',
+            color: exportDone ? '#d4f0e0' : 'var(--export-text)',
+            fontSize: 11, fontWeight: 600, letterSpacing: '0.09em', textTransform: 'uppercase',
+            transition: 'background 220ms cubic-bezier(0.25,0,0,1), color 220ms cubic-bezier(0.25,0,0,1), transform 80ms cubic-bezier(0.25,0,0,1), opacity 140ms cubic-bezier(0.25,0,0,1)',
+            opacity: isExporting ? 0.65 : 1, cursor: isExporting ? 'default' : 'pointer',
+          }}
+            onMouseEnter={e => { if (!isExporting && !exportDone) e.currentTarget.style.opacity = '0.84' }}
+            onMouseLeave={e => { if (!isExporting && !exportDone) e.currentTarget.style.opacity = '1' }}
+            onMouseDown={e => { if (!isExporting) e.currentTarget.style.transform = 'scale(0.978) translateY(1px)' }}
+            onMouseUp={e => { e.currentTarget.style.transform = 'scale(1) translateY(0)' }}>
+            {exportDone ? '✓ Saved' : isExporting ? 'Exporting…' : <><span>Export</span><ArrowUpRight /></>}
+          </button>
+        </div>
 
       </div>}
     </div>

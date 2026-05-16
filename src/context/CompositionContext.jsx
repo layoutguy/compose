@@ -21,12 +21,13 @@ export const XPORT_DEFAULTS = {
 }
 
 export const LOGO_DEFAULTS = {
-  url:      null,
-  name:     null,
-  sizeDots: 2,
-  position: 'bot-right',
-  offsetX:  0,
-  offsetY:  0,
+  url:       null,
+  name:      null,
+  sizeDots:  2,
+  position:  'bot-right',
+  offsetX:   0,
+  offsetY:   0,
+  tintColor: null,   // null = original colors; hex string = tinted
 }
 
 export const ADVANCED_DEFAULTS = {

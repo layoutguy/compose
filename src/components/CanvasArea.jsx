@@ -4,6 +4,7 @@ import { renderGrid, computeGridLayout } from '../canvas/grid'
 import { renderLogo, applyLogoMask, computeLogoGeometry } from '../canvas/logo'
 import { useViewport } from '../hooks/useViewport'
 import { useComposition } from '../hooks/useComposition'
+import { registerTransition } from '../hooks/useCanvasTransition'
 
 // ─── Handle definitions ───────────────────────────────────────────────────────
 
@@ -70,21 +71,62 @@ function LogoHandles({ rect, visible, onHandleMouseDown, touch = false }) {
 
 // ─── Overlays ─────────────────────────────────────────────────────────────────
 
-function ZoomBadge({ percent }) {
+function ZoomControls({ percent, onZoomIn, onZoomOut, onFit }) {
   return (
     <div style={{
-      position: 'absolute', top: 14, right: 14,
-      padding: '4px 8px',
-      background: 'rgba(10,10,12,0.72)',
-      backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-      border: '1px solid rgba(255,255,255,0.06)',
-      borderRadius: 'var(--radius-sm)',
-      fontSize: 10, fontWeight: 500, color: 'var(--text-tertiary)',
-      letterSpacing: '0.06em', fontVariantNumeric: 'tabular-nums',
-      pointerEvents: 'none', userSelect: 'none',
-      transition: 'color 220ms cubic-bezier(0.25,0,0,1)',
+      position: 'absolute', bottom: 14, right: 14,
+      display: 'flex', alignItems: 'center',
+      height: 30,
+      background: 'rgba(16,16,20,0.88)',
+      backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+      border: '1px solid rgba(255,255,255,0.10)',
+      borderRadius: 'var(--radius-md)',
+      boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+      overflow: 'hidden',
+      userSelect: 'none',
     }}>
-      {percent}%
+      {/* Minus */}
+      <button onClick={onZoomOut} title="Zoom out" style={{
+        width: 30, height: '100%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'rgba(255,255,255,0.65)',
+        background: 'transparent',
+        borderRight: '1px solid rgba(255,255,255,0.08)',
+        fontSize: 16, lineHeight: 1, fontWeight: 300,
+        transition: 'color 120ms, background 120ms',
+      }}
+        onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
+        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; e.currentTarget.style.background = 'transparent' }}
+      >−</button>
+
+      {/* Percentage — click to fit */}
+      <button onClick={onFit} title="Reset zoom to fit" style={{
+        padding: '0 10px', height: '100%',
+        display: 'flex', alignItems: 'center',
+        fontSize: 11, fontWeight: 500, letterSpacing: '0.04em',
+        fontVariantNumeric: 'tabular-nums',
+        color: 'rgba(255,255,255,0.75)',
+        background: 'transparent',
+        borderRight: '1px solid rgba(255,255,255,0.08)',
+        minWidth: 46, justifyContent: 'center',
+        transition: 'color 120ms, background 120ms',
+      }}
+        onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
+        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; e.currentTarget.style.background = 'transparent' }}
+      >{percent}%</button>
+
+      {/* Plus */}
+      <button onClick={onZoomIn} title="Zoom in" style={{
+        width: 30, height: '100%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'rgba(255,255,255,0.65)',
+        background: 'transparent',
+        fontSize: 16, lineHeight: 1, fontWeight: 300,
+        transition: 'color 120ms, background 120ms',
+      }}
+        onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
+        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; e.currentTarget.style.background = 'transparent' }}
+      >+</button>
     </div>
   )
 }
@@ -147,11 +189,12 @@ const isTouchDevice = typeof window !== 'undefined' &&
   ('ontouchstart' in window || navigator.maxTouchPoints > 0)
 
 export default function CanvasArea() {
-  const containerRef = useRef(null)
-  const canvasRef    = useRef(null)
-  const rafRef       = useRef(null)
+  const containerRef  = useRef(null)
+  const canvasRef     = useRef(null)
+  const rafRef        = useRef(null)
+  const wrapperRef    = useRef(null)
 
-  const { computeLayout, zoom }                                        = useViewport()
+  const { computeLayout, zoom, zoomBy, zoomIn, zoomOut, resetView }  = useViewport()
   const { grid, display, dot, logo, advanced, setLogoFile, setLogoParam } = useComposition()
 
   // ─── Canvas frame dimensions — React-controlled so layout changes immediately ──
@@ -239,7 +282,7 @@ export default function CanvasArea() {
   const render = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const { displayW, displayH, fitScale } = layoutRef.current
+    const { displayW, displayH, finalScale: fitScale } = layoutRef.current
     if (!displayW || !displayH) return
 
     const adv = advancedRef.current
@@ -355,6 +398,51 @@ export default function CanvasArea() {
     img.src = logo.url
   }, [logo.url, scheduleRender])
 
+  // ── Canvas blur transition (used by suggestion Apply) ────────────────────────
+  useEffect(() => {
+    registerTransition((callback) => {
+      const el = wrapperRef.current
+      if (!el) { callback(); return }
+
+      // Blur out
+      el.style.transition = 'filter 100ms ease, opacity 100ms ease'
+      el.style.filter     = 'blur(5px)'
+      el.style.opacity    = '0.55'
+
+      setTimeout(() => {
+        callback() // apply new grid values
+
+        // Tiny delay so React flushes the new state before unblurring
+        requestAnimationFrame(() => {
+          el.style.filter  = 'blur(0px)'
+          el.style.opacity = '1'
+
+          // Clean up inline styles after transition ends
+          setTimeout(() => {
+            el.style.transition = ''
+            el.style.filter     = ''
+            el.style.opacity    = ''
+          }, 180)
+        })
+      }, 120)
+    })
+  }, [])
+
+  // ── Scroll-to-zoom ────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const onWheel = (e) => {
+      e.preventDefault()
+      // Normalise delta across trackpads and mouse wheels
+      const raw    = e.deltaY ?? e.detail ?? 0
+      const factor = raw < 0 ? 1.08 : 1 / 1.08
+      zoomBy(factor)
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [zoomBy])
+
   // ── Load background image ─────────────────────────────────────────────────────
   useEffect(() => {
     if (!advanced.bgImageUrl) { bgImgRef.current = null; scheduleRender(); return }
@@ -397,7 +485,7 @@ export default function CanvasArea() {
     }
   }, []) // reads only from stable refs
 
-  // ── Re-snap when Snap is toggled ON ──────────────────────────────────────────
+  // ── Re-snap when Snap is toggled ON or logo position changes ─────────────────
   useEffect(() => {
     if (!display.showGuides) return
     if (!logoImgRef.current || !logoRef.current?.url) return
@@ -405,7 +493,7 @@ export default function CanvasArea() {
     const snapped = snapToNearestDot(lo.offsetX, lo.offsetY)
     setLogoParam('offsetX', snapped.offsetX)
     setLogoParam('offsetY', snapped.offsetY)
-  }, [display.showGuides]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [display.showGuides, logo.position]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Global mouse + touch listeners for logo resize drag + logo body drag ───────
   useEffect(() => {
@@ -619,7 +707,7 @@ export default function CanvasArea() {
       }}
     >
       {/* Canvas wrapper — sized by React to match the artboard frame exactly */}
-      <div style={{ position: 'relative', flexShrink: 0 }}>
+      <div ref={wrapperRef} style={{ position: 'relative', flexShrink: 0 }}>
         <DimensionLabel w={advanced.outputW} h={advanced.outputH} />
 
         <canvas
@@ -657,7 +745,7 @@ export default function CanvasArea() {
 
       </div>
 
-      <ZoomBadge percent={percent} />
+      <ZoomControls percent={percent} onZoomIn={zoomIn} onZoomOut={zoomOut} onFit={resetView} />
       {isDragOver && <DropOverlay />}
     </div>
   )

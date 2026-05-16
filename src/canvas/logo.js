@@ -68,8 +68,24 @@ export function renderLogo(ctx, dpr, fitScale, grid, layout, img, logo) {
   const { logoX, logoY, logoWOut, logoHOut } =
     computeLogoGeometry(grid, layout, img, logo)
 
-  const d = v => v * fitScale
-  ctx.drawImage(img, d(logoX), d(logoY), d(logoWOut), d(logoHOut))
+  const d  = v => v * fitScale
+  const dx = d(logoX), dy = d(logoY)
+  const dw = d(logoWOut), dh = d(logoHOut)
+
+  if (logo.tintColor) {
+    // Draw to an offscreen canvas, then paint the tint color over opaque pixels only
+    const off    = document.createElement('canvas')
+    off.width    = Math.max(1, Math.ceil(dw))
+    off.height   = Math.max(1, Math.ceil(dh))
+    const oc     = off.getContext('2d')
+    oc.drawImage(img, 0, 0, off.width, off.height)
+    oc.globalCompositeOperation = 'source-atop'
+    oc.fillStyle = logo.tintColor
+    oc.fillRect(0, 0, off.width, off.height)
+    ctx.drawImage(off, dx, dy, dw, dh)
+  } else {
+    ctx.drawImage(img, dx, dy, dw, dh)
+  }
 }
 
 // ─── Masking ──────────────────────────────────────────────────────────────────

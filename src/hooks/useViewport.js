@@ -33,7 +33,8 @@ export function useViewport() {
 
   const zoomIn   = useCallback(() => setZoom(z => Math.min(z * 1.25, 8)),   [])
   const zoomOut  = useCallback(() => setZoom(z => Math.max(z / 1.25, 0.1)), [])
+  const zoomBy   = useCallback((factor) => setZoom(z => Math.max(0.1, Math.min(8, z * factor))), [])
   const resetView = useCallback(() => { setZoom(1.0); setPan({ x: 0, y: 0 }) }, [])
 
-  return { zoom, pan, viewRef, computeLayout, zoomIn, zoomOut, resetView }
+  return { zoom, pan, viewRef, computeLayout, zoomIn, zoomOut, zoomBy, resetView }
 }

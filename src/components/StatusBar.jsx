@@ -75,8 +75,6 @@ export default function StatusBar() {
       {/* Left */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
 
-        <Pipe />
-
         {/* Logo indicator */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <div style={{

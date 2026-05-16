@@ -49,7 +49,7 @@ export default function PositionPicker({ selected = 'bot-right', onSelect }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              aspectRatio: '1',
+              height: 32,
               borderRadius: 'var(--radius-sm)',
               border: `1px solid ${isSelected ? 'rgba(255,255,255,0.14)' : 'transparent'}`,
               background: isSelected ? 'rgba(255,255,255,0.07)' : 'transparent',
