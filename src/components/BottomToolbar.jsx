@@ -52,7 +52,7 @@ function Sep() {
   return <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.07)', flexShrink: 0, margin: '0 6px' }} />
 }
 
-function ToolbarBtn({ children, active, onClick, style, title }) {
+function ToolbarBtn({ children, active, onClick, style, title, hoverColor, hoverBg }) {
   const base = active ? 'var(--text-primary)' : 'var(--text-secondary)'
   return (
     <button onClick={onClick} title={title} style={{
@@ -66,7 +66,7 @@ function ToolbarBtn({ children, active, onClick, style, title }) {
       transition: 'color 140ms cubic-bezier(0.25,0,0,1), background 140ms cubic-bezier(0.25,0,0,1), transform 80ms cubic-bezier(0.25,0,0,1), opacity 80ms cubic-bezier(0.25,0,0,1)',
       whiteSpace: 'nowrap', ...style,
     }}
-      onMouseEnter={e => { if (!active) { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)' } }}
+      onMouseEnter={e => { if (!active) { e.currentTarget.style.color = hoverColor ?? 'var(--text-primary)'; e.currentTarget.style.background = hoverBg ?? 'rgba(255,255,255,0.05)' } }}
       onMouseLeave={e => { if (!active) { e.currentTarget.style.color = base; e.currentTarget.style.background = active ? 'rgba(255,255,255,0.06)' : 'transparent' } }}>
       {children}
     </button>
@@ -174,7 +174,8 @@ export default function BottomToolbar() {
               <UploadIcon /> Replace
             </ToolbarBtn>
             <Sep />
-            <ToolbarBtn onClick={clearLogo} title="Remove logo">
+            <ToolbarBtn onClick={clearLogo} title="Remove logo"
+              hoverColor="rgba(232,84,84,0.9)" hoverBg="rgba(232,84,84,0.08)">
               Remove
             </ToolbarBtn>
             {!display.showGuides && <Sep />}
