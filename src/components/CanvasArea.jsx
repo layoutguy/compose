@@ -95,7 +95,7 @@ function UndoRedoControls({ onUndo, onRedo, canUndo, canRedo }) {
   })
   return (
     <div style={{
-      position: 'absolute', bottom: 14, right: 110,
+      position: 'absolute', top: 14, right: 14,
       display: 'flex', alignItems: 'center',
       height: 30,
       background: 'var(--bg-overlay)',
