@@ -1,8 +1,8 @@
 import { OUTPUT_W, OUTPUT_H } from './artboard'
 
 export const GRID_DEFAULTS = {
-  cols:   10,
-  rows:    5,
+  cols:   16,
+  rows:    9,
   margin: 120,
   // spacing is no longer a user param — it is derived from artboard geometry
 }
