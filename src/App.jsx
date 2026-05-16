@@ -36,63 +36,74 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    const handle = handleRef.current
-    if (!handle) return
+    if (!panelOpen) return
+    // Wait one frame for the sheet/handle to mount
+    const frame = requestAnimationFrame(() => {
+      const handle = handleRef.current
+      if (!handle) return
 
-    const onStart = (e) => {
-      e.preventDefault()
-      const sheet = sheetRef.current
-      if (!sheet) return
-      sheet.style.transition = 'none'
-      dragRef.current = { startY: e.touches[0].clientY, lastY: e.touches[0].clientY, vel: 0 }
-    }
-
-    const onMove = (e) => {
-      e.preventDefault()
-      if (!dragRef.current) return
-      const sheet = sheetRef.current
-      if (!sheet) return
-      const y  = e.touches[0].clientY
-      dragRef.current.vel   = y - dragRef.current.lastY
-      dragRef.current.lastY = y
-      const dy = y - dragRef.current.startY
-      // Follow finger exactly downward; resist upward past start
-      const clamped = dy < 0 ? dy * 0.2 : dy
-      sheet.style.transform = `translate3d(0,${clamped}px,0)`
-    }
-
-    const onEnd = (e) => {
-      if (!dragRef.current) return
-      const sheet = sheetRef.current
-      const dy    = e.changedTouches[0].clientY - dragRef.current.startY
-      const vel   = dragRef.current.vel
-      dragRef.current = null
-      if (!sheet) return
-
-      if (dy < -40 || vel < -6) {
-        snap(sheet, 0, true)
-        setSheetFull(true)
-      } else if (dy > 60 || vel > 8) {
-        snap(sheet, window.innerHeight, true, () => {
-          setPanelOpen(false)
-          setSheetFull(false)
-          sheet.style.transition = 'none'
-          sheet.style.transform  = 'translate3d(0,0,0)'
-        })
-      } else {
-        snap(sheet, 0, true)
+      const onStart = (e) => {
+        e.preventDefault()
+        const sheet = sheetRef.current
+        if (!sheet) return
+        sheet.style.transition = 'none'
+        dragRef.current = { startY: e.touches[0].clientY, lastY: e.touches[0].clientY, vel: 0 }
       }
-    }
 
-    handle.addEventListener('touchstart', onStart, { passive: false })
-    handle.addEventListener('touchmove',  onMove,  { passive: false })
-    handle.addEventListener('touchend',   onEnd,   { passive: false })
+      const onMove = (e) => {
+        e.preventDefault()
+        if (!dragRef.current) return
+        const sheet = sheetRef.current
+        if (!sheet) return
+        const y = e.touches[0].clientY
+        dragRef.current.vel   = y - dragRef.current.lastY
+        dragRef.current.lastY = y
+        const dy = y - dragRef.current.startY
+        const t  = dy < 0 ? dy * 0.15 : dy
+        sheet.style.transform = `translate3d(0,${t}px,0)`
+      }
+
+      const onEnd = (e) => {
+        if (!dragRef.current) return
+        const sheet = sheetRef.current
+        const dy    = e.changedTouches[0].clientY - dragRef.current.startY
+        const vel   = dragRef.current.vel
+        dragRef.current = null
+        if (!sheet) return
+
+        if (dy < -40 || vel < -6) {
+          snap(sheet, 0, true)
+          setSheetFull(true)
+        } else if (dy > 60 || vel > 8) {
+          snap(sheet, window.innerHeight, true, () => {
+            setPanelOpen(false)
+            setSheetFull(false)
+            sheet.style.transition = 'none'
+            sheet.style.transform  = 'translate3d(0,0,0)'
+          })
+        } else {
+          snap(sheet, 0, true)
+        }
+      }
+
+      handle.addEventListener('touchstart', onStart, { passive: false })
+      handle.addEventListener('touchmove',  onMove,  { passive: false })
+      handle.addEventListener('touchend',   onEnd,   { passive: false })
+
+      // Store cleanup on the handle element so we can call it when panelOpen → false
+      handle._cleanup = () => {
+        handle.removeEventListener('touchstart', onStart)
+        handle.removeEventListener('touchmove',  onMove)
+        handle.removeEventListener('touchend',   onEnd)
+      }
+    })
+
     return () => {
-      handle.removeEventListener('touchstart', onStart)
-      handle.removeEventListener('touchmove',  onMove)
-      handle.removeEventListener('touchend',   onEnd)
+      cancelAnimationFrame(frame)
+      const handle = handleRef.current
+      if (handle?._cleanup) { handle._cleanup(); handle._cleanup = null }
     }
-  }, [snap])
+  }, [panelOpen, snap])
 
   return (
     <CompositionProvider>
