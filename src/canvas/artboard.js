@@ -41,8 +41,8 @@ function ensureNoise() {
 function renderBackground(ctx, w, h, bgOpts = {}) {
   const {
     bgType          = 'solid',
-    bgColor         = '#0E0E12',
-    bgGradientFrom  = '#0E0E12',
+    bgColor         = '#11100D',
+    bgGradientFrom  = '#11100D',
     bgGradientTo    = '#1A1A2E',
     bgGradientAngle = 135,
     bgImageEl       = null,

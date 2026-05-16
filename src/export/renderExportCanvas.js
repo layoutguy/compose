@@ -54,8 +54,8 @@ export async function renderExportCanvas(grid, dot, logo, scale = 1, advanced = 
 
     const bgOpts = {
       bgType:          advanced.bgType          ?? 'solid',
-      bgColor:         advanced.bgColor         ?? '#0E0E12',
-      bgGradientFrom:  advanced.bgGradientFrom  ?? '#0E0E12',
+      bgColor:         advanced.bgColor         ?? '#11100D',
+      bgGradientFrom:  advanced.bgGradientFrom  ?? '#11100D',
       bgGradientTo:    advanced.bgGradientTo    ?? '#1A1A2E',
       bgGradientAngle: advanced.bgGradientAngle ?? 135,
       bgImageEl,
