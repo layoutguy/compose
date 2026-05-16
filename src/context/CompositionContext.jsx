@@ -12,7 +12,7 @@ export const DOT_DEFAULTS = {
   shape:   'square',
   size:    5,
   opacity: 0.84,
-  color:   '#FFFFFF',
+  color:   '#FAEFE4',
 }
 
 export const XPORT_DEFAULTS = {
