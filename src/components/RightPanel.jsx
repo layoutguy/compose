@@ -3,7 +3,7 @@ import PrecisionSlider from './ui/PrecisionSlider'
 import PositionPicker from './ui/PositionPicker'
 import ShapePicker from './ui/ShapePicker'
 import { useComposition } from '../hooks/useComposition'
-import { computeGridLayout } from '../canvas/grid'
+import { computeGridLayout, findIntegritySuggestion } from '../canvas/grid'
 import { renderExportCanvas } from '../export/renderExportCanvas'
 import {
   exportAsPNG, exportAsJPG, exportAsWEBP, exportAsPDF, exportAsSVG,
@@ -493,7 +493,7 @@ const INTEGRITY_LABELS = {
   'n/a':      '—',
 }
 
-function GridIntegrity({ layout }) {
+function GridIntegrity({ layout, suggestion, onApplySuggestion }) {
   const { spacingX, spacingY, diff, integrity, dotCount } = layout
   const color = INTEGRITY_COLORS[integrity] ?? 'var(--text-tertiary)'
   const label = INTEGRITY_LABELS[integrity] ?? '—'
@@ -550,6 +550,37 @@ function GridIntegrity({ layout }) {
           {dotCount}
         </span>
       </div>
+
+      {/* Suggestion chip */}
+      {suggestion && (
+        <button
+          onClick={() => onApplySuggestion?.(suggestion.axis, suggestion.value)}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '7px 11px',
+            borderTop: '1px solid var(--border)',
+            background: 'rgba(79,127,217,0.06)',
+            cursor: 'pointer',
+            textAlign: 'left',
+            transition: 'background 120ms',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(79,127,217,0.12)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(79,127,217,0.06)'}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ fontSize: 10, color: 'var(--accent-blue)', opacity: 0.7 }}>✦</span>
+            <span style={{ fontSize: 11, color: 'var(--accent-blue)' }}>
+              Try {suggestion.axis === 'cols' ? 'columns' : 'rows'} → {suggestion.value}
+            </span>
+          </div>
+          <span style={{
+            fontSize: 10, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase',
+            color: INTEGRITY_COLORS[suggestion.integrity],
+          }}>
+            {INTEGRITY_LABELS[suggestion.integrity]} · {suggestion.diff}px
+          </span>
+        </button>
+      )}
 
     </div>
   )
@@ -622,6 +653,7 @@ export default function RightPanel({ sheetMode = false }) {
   const handleBgFileChange   = e => { const f = e.target.files?.[0]; if (f) setBgImageFile(f); e.target.value = '' }
 
   const layout          = computeGridLayout(grid, { outputW: advanced.outputW, outputH: advanced.outputH })
+  const suggestion      = findIntegritySuggestion(grid, { outputW: advanced.outputW, outputH: advanced.outputH })
   const isCustomArtboard = !ARTBOARD_PRESETS.some(p => p.w === advanced.outputW && p.h === advanced.outputH)
 
   const expDims = xport.format === 'svg'
@@ -775,8 +807,12 @@ export default function RightPanel({ sheetMode = false }) {
         <ScrubInput label="Rows"    value={grid.rows}   onChange={v => setGridParam('rows', Math.max(1, v))}   min={1} max={30}  step={1} dragMultiplier={0.18} />
         <ScrubInput label="Margin"  value={grid.margin} onChange={v => setGridParam('margin', v)} min={0} max={500} step={1} unit="px" dragMultiplier={1.2} />
 
-        {/* Square integrity — passive, read-only diagnostic */}
-        <GridIntegrity layout={layout} />
+        {/* Square integrity — with optional improvement suggestion */}
+        <GridIntegrity
+          layout={layout}
+          suggestion={suggestion}
+          onApplySuggestion={(axis, value) => setGridParam(axis, value)}
+        />
 
       </div>}
 

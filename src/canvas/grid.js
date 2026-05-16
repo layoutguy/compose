@@ -66,10 +66,11 @@ export function computeGridLayout({ cols, rows, margin }, dims = {}) {
   // Use a relative threshold: diff as a fraction of average spacing.
   // This makes the rating scale-aware — a 9px diff on 300px spacing cells
   // is far more "square" than a 9px diff on 20px spacing cells.
+  const avgSpacing = canEval ? (sx + sy) / 2 : 1
+  const relDiff    = canEval ? diff / avgSpacing : 0
+
   let integrity = 'n/a'
   if (canEval) {
-    const avgSpacing = (sx + sy) / 2
-    const relDiff = diff / avgSpacing   // 0 = perfect square, 1 = wildly off
     if      (relDiff <= 0.06) integrity = 'excellent'
     else if (relDiff <= 0.15) integrity = 'acceptable'
     else                      integrity = 'poor'
@@ -83,11 +84,56 @@ export function computeGridLayout({ cols, rows, margin }, dims = {}) {
     dotCount:  c * r,
     // integrity diagnostics
     diff:      Math.round(diff),
+    relDiff,
     integrity,              // 'excellent' | 'acceptable' | 'poor' | 'n/a'
     // legacy shims — kept so existing callers don't crash
     isClamped:     false,
     actualSpacing: Math.round(Math.min(sx, sy)),
   }
+}
+
+// ─── Integrity suggestion ─────────────────────────────────────────────────────
+
+/**
+ * Scan cols ±1..3 and rows ±1..3 to find the nearest single-axis change
+ * that meaningfully improves square integrity.
+ * Returns { axis: 'cols'|'rows', value, diff, relDiff, integrity } or null.
+ */
+export function findIntegritySuggestion(grid, dims = {}) {
+  const { cols, rows, margin } = grid
+  const current = computeGridLayout(grid, dims)
+
+  // Already perfect — no suggestion needed
+  if (current.integrity === 'excellent') return null
+
+  const RANK = { excellent: 0, acceptable: 1, poor: 2, 'n/a': 3 }
+  let best = null
+
+  const tryLayout = (axis, value) => {
+    if (value < 2) return
+    const g = axis === 'cols'
+      ? { cols: value, rows, margin }
+      : { cols, rows: value, margin }
+    const l = computeGridLayout(g, dims)
+    if (l.integrity === 'n/a') return
+
+    const betterRank  = RANK[l.integrity] < RANK[current.integrity]
+    const betterRel   = l.relDiff < current.relDiff * 0.6   // at least 40% improvement
+    if (!betterRank && !betterRel) return
+
+    if (!best || l.relDiff < best.relDiff) {
+      best = { axis, value, diff: l.diff, relDiff: l.relDiff, integrity: l.integrity }
+    }
+  }
+
+  for (let d = 1; d <= 3; d++) {
+    tryLayout('cols', cols + d)
+    tryLayout('cols', cols - d)
+    tryLayout('rows', rows + d)
+    tryLayout('rows', rows - d)
+  }
+
+  return best
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
