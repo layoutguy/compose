@@ -35,7 +35,6 @@ export default function App() {
   }, [])
 
   const onHandleTouchStart = useCallback((e) => {
-    e.preventDefault()
     const el = sheetRef.current
     if (!el) return
     dragRef.current = { startY: e.touches[0].clientY, lastY: e.touches[0].clientY, vel: 0 }
@@ -43,7 +42,6 @@ export default function App() {
   }, [setTranslate])
 
   const onHandleTouchMove = useCallback((e) => {
-    e.preventDefault()
     if (!dragRef.current) return
     const y = e.touches[0].clientY
     dragRef.current.vel  = y - dragRef.current.lastY
