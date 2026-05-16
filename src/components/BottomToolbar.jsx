@@ -116,7 +116,7 @@ function PositionPopup({ selected, onSelect, onClose }) {
       style={{
         position: 'absolute', bottom: 'calc(100% + 10px)', left: '50%',
         transform: 'translateX(-50%)',
-        background: 'rgba(16,16,20,0.95)',
+        background: 'var(--bg-overlay-heavy)',
         backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
         border: '1px solid rgba(255,255,255,0.08)',
         borderRadius: 'var(--radius-xl)',
@@ -210,7 +210,7 @@ export default function BottomToolbar() {
       <div style={{
         display: 'flex', alignItems: 'center',
         height: 46, padding: '0 10px',
-        background: 'rgba(16,16,20,0.88)',
+        background: 'var(--bg-overlay)',
         backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
         border: '1px solid rgba(255,255,255,0.08)',
         borderRadius: 'var(--radius-xl)',

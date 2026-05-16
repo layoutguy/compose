@@ -58,7 +58,7 @@ function LogoHandles({ rect, visible, onHandleMouseDown, touch = false }) {
           <div style={{
             width: visSize, height: visSize,
             border: '1.5px solid rgba(0,87,200,0.9)',
-            background: '#0A0A0C',
+            background: 'var(--bg-handle)',
             borderRadius: 2,
             boxShadow: '0 1px 4px rgba(0,0,0,0.6)',
             flexShrink: 0,
@@ -77,7 +77,7 @@ function ZoomControls({ percent, onZoomIn, onZoomOut, onFit }) {
       position: 'absolute', bottom: 14, right: 14,
       display: 'flex', alignItems: 'center',
       height: 30,
-      background: 'rgba(16,16,20,0.88)',
+      background: 'var(--bg-overlay)',
       backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
       border: '1px solid rgba(255,255,255,0.10)',
       borderRadius: 'var(--radius-md)',
@@ -156,7 +156,7 @@ function DropOverlay() {
     <div style={{
       position: 'absolute', inset: 0, zIndex: 40,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'rgba(10,10,12,0.78)',
+      background: 'var(--bg-overlay-dim)',
       backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
       pointerEvents: 'none',
     }}>
@@ -715,7 +715,7 @@ export default function CanvasArea() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'radial-gradient(ellipse 80% 70% at 50% 50%, hsl(48,13%,9%) 0%, hsl(48,9%,4%) 100%)',
+        background: 'radial-gradient(ellipse 80% 70% at 50% 50%, hsl(var(--hue),13%,9%) 0%, hsl(var(--hue),9%,4%) 100%)',
         overflow: 'hidden',
         minHeight: 0,
         position: 'relative',
