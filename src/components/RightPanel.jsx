@@ -146,9 +146,8 @@ function OffsetInput({ axis, value, onChange }) {
           if (e.key === 'Enter') { commit(); e.currentTarget.blur() }
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             e.preventDefault()
-            const n = parseInt(draft, 10)
-            const next = (isNaN(n) ? 0 : n) + (e.key === 'ArrowUp' ? 1 : -1)
-            const s = String(next); setDraft(s); onChange?.(next)
+            const next = value + (e.key === 'ArrowUp' ? 1 : -1)
+            setDraft(String(next)); onChange?.(next)
           }
         }}
         style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none', fontSize: 12, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }} />
@@ -177,9 +176,8 @@ function NumberInput({ axis, value, onChange, unit = '' }) {
           if (e.key === 'Enter') { commit(); e.currentTarget.blur() }
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             e.preventDefault()
-            const n = parseInt(draft, 10)
-            const next = Math.max(1, (isNaN(n) ? 1 : n) + (e.key === 'ArrowUp' ? 1 : -1))
-            const s = String(next); setDraft(s); onChange?.(next)
+            const next = Math.max(1, value + (e.key === 'ArrowUp' ? 1 : -1))
+            setDraft(String(next)); onChange?.(next)
           }
         }}
         style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none', fontSize: 12, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }} />
@@ -284,9 +282,8 @@ function ArtboardDimInput({ axis, value, onChange }) {
           if (e.key === 'Enter') { commit(); e.currentTarget.blur() }
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             e.preventDefault()
-            const n = parseInt(draft, 10)
-            const step = e.shiftKey ? 100 : e.altKey ? 10 : 1
-            const next = Math.max(1, Math.min(32000, (isNaN(n) ? 1 : n) + (e.key === 'ArrowUp' ? step : -step)))
+            const s = e.shiftKey ? 100 : e.altKey ? 10 : 1
+            const next = Math.max(1, Math.min(32000, value + (e.key === 'ArrowUp' ? s : -s)))
             setDraft(String(next)); apply(next)
           }
         }}
@@ -400,9 +397,7 @@ function ScrubInput({ label, value, onChange, min = 0, max = 9999, step = 1, uni
           if (e.key === 'Enter') { commit(); e.currentTarget.blur() }
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             e.preventDefault()
-            const n = parseFloat(draft)
-            const next = (isNaN(n) ? 0 : n) + (e.key === 'ArrowUp' ? step : -step)
-            apply(next)
+            apply(value + (e.key === 'ArrowUp' ? step : -step))
           }
         }}
         style={{
