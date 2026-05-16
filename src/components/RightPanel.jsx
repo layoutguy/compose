@@ -69,19 +69,34 @@ const labelStyle = { fontSize: 12, color: 'var(--text-secondary)' }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function SectionHeader({ label, active, dot }) {
+function SectionHeader({ label, active, dot, collapsed, onToggle }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 6,
-      height: 36, padding: '0 16px',
-      borderBottom: '1px solid var(--border)', flexShrink: 0,
-    }}>
-      <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+    <div
+      onClick={onToggle}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        height: 36, padding: '0 16px',
+        borderBottom: '1px solid var(--border)',
+        flexShrink: 0,
+        cursor: 'pointer', userSelect: 'none',
+      }}
+      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.025)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+    >
+      <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--text-secondary)', flex: 1 }}>
         {label}
       </span>
       {(active || dot) && (
         <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--accent-blue)', flexShrink: 0 }} />
       )}
+      <span style={{
+        fontSize: 14, lineHeight: 1, fontWeight: 300,
+        color: 'var(--text-tertiary)',
+        flexShrink: 0, marginLeft: 4,
+        transition: 'color 120ms',
+      }}>
+        {collapsed ? '+' : '−'}
+      </span>
     </div>
   )
 }
@@ -532,6 +547,9 @@ export default function RightPanel({ sheetMode = false }) {
     advanced, setAdvancedParam, setBgImageFile, clearBgImage,
   } = useComposition()
 
+  const [collapsed, setCollapsed] = useState({})
+  const toggle = (key) => setCollapsed(c => ({ ...c, [key]: !c[key] }))
+
   const [isExporting, setIsExporting] = useState(false)
   const [exportDone,  setExportDone]  = useState(false)
 
@@ -595,8 +613,8 @@ export default function RightPanel({ sheetMode = false }) {
     }}>
 
       {/* ══ 1. ARTBOARD SIZE ══ */}
-      <SectionHeader label="Artboard" dot={isCustomArtboard} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '14px 16px 18px', borderBottom: '1px solid var(--border)' }}>
+      <SectionHeader label="Artboard" dot={isCustomArtboard} collapsed={collapsed.artboard} onToggle={() => toggle('artboard')} />
+      {!collapsed.artboard && <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '14px 16px 18px', borderBottom: '1px solid var(--border)' }}>
 
         {/* W / H inputs */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, minWidth: 0 }}>
@@ -654,11 +672,11 @@ export default function RightPanel({ sheetMode = false }) {
           })}
         </div>
 
-      </div>
+      </div>}
 
       {/* ══ 2. BACKGROUND ══ */}
-      <SectionHeader label="Background" dot={advanced.bgType !== 'solid'} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 16px 18px', borderBottom: '1px solid var(--border)' }}>
+      <SectionHeader label="Background" dot={advanced.bgType !== 'solid'} collapsed={collapsed.background} onToggle={() => toggle('background')} />
+      {!collapsed.background && <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 16px 18px', borderBottom: '1px solid var(--border)' }}>
 
         <SegmentRow
           items={[{ label: 'Solid', value: 'solid' }, { label: 'Gradient', value: 'gradient' }, { label: 'Image', value: 'image' }]}
@@ -713,11 +731,11 @@ export default function RightPanel({ sheetMode = false }) {
           </>
         )}
 
-      </div>
+      </div>}
 
-      {/* ══ 2. GRID ══ */}
-      <SectionHeader label="Grid" active />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '14px 16px 18px', borderBottom: '1px solid var(--border)' }}>
+      {/* ══ 3. GRID ══ */}
+      <SectionHeader label="Grid" active collapsed={collapsed.grid} onToggle={() => toggle('grid')} />
+      {!collapsed.grid && <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '14px 16px 18px', borderBottom: '1px solid var(--border)' }}>
 
         <ScrubInput label="Columns" value={grid.cols}   onChange={v => setGridParam('cols', Math.max(1, v))}   min={1} max={50}  step={1} dragMultiplier={0.25} />
         <ScrubInput label="Rows"    value={grid.rows}   onChange={v => setGridParam('rows', Math.max(1, v))}   min={1} max={30}  step={1} dragMultiplier={0.18} />
@@ -726,11 +744,11 @@ export default function RightPanel({ sheetMode = false }) {
         {/* Square integrity — passive, read-only diagnostic */}
         <GridIntegrity layout={layout} />
 
-      </div>
+      </div>}
 
-      {/* ══ 3. DOT ══ */}
-      <SectionHeader label="Dot" active />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '14px 16px 18px', borderBottom: '1px solid var(--border)' }}>
+      {/* ══ 4. DOT ══ */}
+      <SectionHeader label="Dot" active collapsed={collapsed.dot} onToggle={() => toggle('dot')} />
+      {!collapsed.dot && <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '14px 16px 18px', borderBottom: '1px solid var(--border)' }}>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span style={labelStyle}>Shape</span>
@@ -745,11 +763,11 @@ export default function RightPanel({ sheetMode = false }) {
           <ColorSwatch value={dot.color} onChange={v => setDotParam('color', v)} />
         </div>
 
-      </div>
+      </div>}
 
-      {/* ══ 4. LOGO ══ */}
-      <SectionHeader label="Logo" active={!!logo.url} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '14px 16px 18px', borderBottom: '1px solid var(--border)' }}>
+      {/* ══ 5. LOGO ══ */}
+      <SectionHeader label="Logo" active={!!logo.url} collapsed={collapsed.logo} onToggle={() => toggle('logo')} />
+      {!collapsed.logo && <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '14px 16px 18px', borderBottom: '1px solid var(--border)' }}>
 
         <input ref={logoFileRef} type="file" accept="image/svg+xml,image/png,image/jpeg,image/webp"
           style={{ display: 'none' }} onChange={handleLogoFileChange} />
@@ -814,11 +832,11 @@ export default function RightPanel({ sheetMode = false }) {
           </>
         )}
 
-      </div>
+      </div>}
 
       {/* ══ 6. ADVANCED ══ */}
-      <SectionHeader label="Advanced" dot={hasNonDefaultAdvanced} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '14px 16px 18px', borderBottom: '1px solid var(--border)' }}>
+      <SectionHeader label="Advanced" dot={hasNonDefaultAdvanced} collapsed={collapsed.advanced} onToggle={() => toggle('advanced')} />
+      {!collapsed.advanced && <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '14px 16px 18px', borderBottom: '1px solid var(--border)' }}>
 
         {/* Blend mode */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -846,11 +864,11 @@ export default function RightPanel({ sheetMode = false }) {
           />
         </div>
 
-      </div>
+      </div>}
 
       {/* ══ 7. EXPORT ══ */}
-      <SectionHeader label="Export" active />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '14px 16px 20px' }}>
+      <SectionHeader label="Export" active collapsed={collapsed.export} onToggle={() => toggle('export')} />
+      {!collapsed.export && <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '14px 16px 20px' }}>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span style={labelStyle}>Format</span>
@@ -931,7 +949,7 @@ export default function RightPanel({ sheetMode = false }) {
           {exportDone ? '✓ Saved' : isExporting ? 'Exporting…' : <><span>Export</span><ArrowUpRight /></>}
         </button>
 
-      </div>
+      </div>}
     </div>
   )
 }
