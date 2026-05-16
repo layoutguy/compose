@@ -49,7 +49,7 @@ const PositionIcon = () => (
 // ─── Primitives ───────────────────────────────────────────────────────────────
 
 function Sep() {
-  return <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.07)', flexShrink: 0, margin: '0 2px' }} />
+  return <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.07)', flexShrink: 0, margin: '0 6px' }} />
 }
 
 function ToolbarBtn({ children, active, onClick, style, title }) {
@@ -57,7 +57,7 @@ function ToolbarBtn({ children, active, onClick, style, title }) {
   return (
     <button onClick={onClick} title={title} style={{
       display: 'flex', alignItems: 'center', gap: 6,
-      padding: '0 10px', height: '100%',
+      padding: '0 13px', height: '100%',
       borderRadius: 'var(--radius-md)',
       color: base,
       background: active ? 'rgba(255,255,255,0.06)' : 'transparent',
@@ -103,6 +103,7 @@ function PositionPopup({ selected, onSelect, onClose }) {
         border: '1px solid rgba(255,255,255,0.08)',
         borderRadius: 'var(--radius-xl)',
         padding: '12px',
+        width: 160,
         boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.04) inset',
         zIndex: 50,
         pointerEvents: 'all',
@@ -110,7 +111,7 @@ function PositionPopup({ selected, onSelect, onClose }) {
       }}
     >
       <div style={{ marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>
           Anchor Point
         </span>
       </div>
@@ -157,7 +158,7 @@ export default function BottomToolbar() {
     }}>
       <div style={{
         display: 'flex', alignItems: 'center',
-        height: 46, padding: '0 6px',
+        height: 46, padding: '0 10px',
         background: 'rgba(16,16,20,0.88)',
         backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
         border: '1px solid rgba(255,255,255,0.08)',
