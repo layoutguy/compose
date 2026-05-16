@@ -195,7 +195,7 @@ export default function CanvasArea() {
   const wrapperRef    = useRef(null)
 
   const { computeLayout, zoom, zoomBy, zoomIn, zoomOut, resetView }  = useViewport()
-  const { grid, display, dot, logo, advanced, setLogoFile, setLogoParam } = useComposition()
+  const { grid, display, dot, logo, advanced, setLogoFile, setLogoParam, clearLogo } = useComposition()
 
   // ─── Canvas frame dimensions — React-controlled so layout changes immediately ──
   // These drive the canvas element's CSS width/height via JSX (not imperative DOM).
@@ -442,6 +442,21 @@ export default function CanvasArea() {
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el.removeEventListener('wheel', onWheel)
   }, [zoomBy])
+
+  // ── Delete logo with keyboard ─────────────────────────────────────────────────
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (!logoSelected) return
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return
+      // Don't intercept when user is typing in an input / textarea
+      const tag = document.activeElement?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      e.preventDefault()
+      clearLogo()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [logoSelected, clearLogo])
 
   // ── Load background image ─────────────────────────────────────────────────────
   useEffect(() => {
