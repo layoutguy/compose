@@ -17,9 +17,9 @@
   --border-strong: rgba(255, 255, 255, 0.10);
   --border-input: rgba(255, 255, 255, 0.08);
 
-  --text-primary: #EDEAE2;
-  --text-secondary: #58585E;
-  --text-tertiary: #38383E;
+  --text-primary:   #EDEAE2;
+  --text-secondary: #909096;
+  --text-tertiary:  #5C5C64;
 
   --accent-blue: #0057C8;
   --accent-blue-glow: rgba(0, 87, 200, 0.20);
