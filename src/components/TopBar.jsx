@@ -94,16 +94,7 @@ export default function TopBar({ isMobile = false, panelOpen = false, onTogglePa
       {/* Centre: stats (desktop only) */}
       {!isMobile && layout && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-          <span style={{ fontSize: 11, color: logo?.url ? 'var(--text-secondary)' : 'var(--text-tertiary)' }}>
-            {logo?.name ?? 'No logo'}
-          </span>
-          <Pipe />
           <Stat label="Grid" value={`${grid.cols} × ${grid.rows}`} />
-          <Pipe />
-          <Stat value={`${layout.dotCount} dots`} muted />
-          <Pipe />
-          <Stat label="H" value={`${Math.round(layout.spacingX)}px`} muted />
-          <Stat label="V" value={`${Math.round(layout.spacingY)}px`} muted />
           <Pipe />
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
             <div style={{
@@ -120,14 +111,6 @@ export default function TopBar({ isMobile = false, panelOpen = false, onTogglePa
           <Stat label="Margin" value={`${grid.margin}px`} />
           <Pipe />
           <Stat value={`${advanced.outputW} × ${advanced.outputH}`} muted />
-          {!display?.showDots && (
-            <>
-              <Pipe />
-              <span style={{ fontSize: 10, color: 'var(--text-tertiary)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                Dots hidden
-              </span>
-            </>
-          )}
         </div>
       )}
 
