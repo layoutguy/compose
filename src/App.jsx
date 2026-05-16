@@ -10,8 +10,11 @@ import './index.css'
 export default function App() {
   const isMobile   = useIsMobile()
   const [panelOpen, setPanelOpen] = useState(false)
+  const [sheetFull, setSheetFull] = useState(false)
+  const sheetRef   = useRef(null)
+  const dragRef    = useRef(null) // { startY, startFull }
 
-  // Swipe-up to open panel on mobile
+  // Swipe-up on canvas to open panel
   const swipeStartY = useRef(null)
   const onTouchStart = useCallback((e) => {
     swipeStartY.current = e.touches[0].clientY
@@ -19,8 +22,42 @@ export default function App() {
   const onTouchEnd = useCallback((e) => {
     if (swipeStartY.current === null) return
     const dy = swipeStartY.current - e.changedTouches[0].clientY
-    if (dy > 60) setPanelOpen(true)   // upward swipe > 60px opens panel
+    if (dy > 60) setPanelOpen(true)
     swipeStartY.current = null
+  }, [])
+
+  // Sheet handle drag
+  const onHandleTouchStart = useCallback((e) => {
+    dragRef.current = { startY: e.touches[0].clientY, startFull: sheetFull }
+    const el = sheetRef.current
+    if (el) { el.style.transition = 'none' }
+  }, [sheetFull])
+
+  const onHandleTouchMove = useCallback((e) => {
+    if (!dragRef.current) return
+    const dy = e.touches[0].clientY - dragRef.current.startY
+    const el = sheetRef.current
+    if (!el) return
+    // Only allow dragging downward (positive dy) to dismiss, or upward to expand
+    const clamped = Math.max(-window.innerHeight * 0.18, dy)
+    el.style.transform = `translateY(${clamped}px)`
+  }, [])
+
+  const onHandleTouchEnd = useCallback((e) => {
+    if (!dragRef.current) return
+    const dy = e.changedTouches[0].clientY - dragRef.current.startY
+    const el = sheetRef.current
+    if (el) {
+      el.style.transition = 'transform 300ms cubic-bezier(0.16,1,0.3,1)'
+      el.style.transform = 'translateY(0)'
+    }
+    if (dy < -60) {
+      setSheetFull(true)   // dragged up → full screen
+    } else if (dy > 80) {
+      setPanelOpen(false)  // dragged down → dismiss
+      setSheetFull(false)
+    }
+    dragRef.current = null
   }, [])
 
   return (
@@ -69,7 +106,7 @@ export default function App() {
           <>
             {/* Backdrop */}
             <div
-              onClick={() => setPanelOpen(false)}
+              onClick={() => { setPanelOpen(false); setSheetFull(false) }}
               style={{
                 position: 'fixed', inset: 0, zIndex: 90,
                 background: 'rgba(0,0,0,0.55)',
@@ -80,33 +117,39 @@ export default function App() {
             />
 
             {/* Sheet */}
-            <div style={{
+            <div ref={sheetRef} style={{
               position: 'fixed', bottom: 0, left: 0, right: 0,
               zIndex: 100,
-              maxHeight: '82dvh',
+              height: sheetFull ? '100dvh' : '82dvh',
               display: 'flex',
               flexDirection: 'column',
-              borderRadius: 'var(--radius-xl) var(--radius-xl) 0 0',
+              borderRadius: sheetFull ? 0 : 'var(--radius-xl) var(--radius-xl) 0 0',
               overflow: 'hidden',
               boxShadow: '0 -8px 48px rgba(0,0,0,0.7)',
               animation: 'sheetSlideUp 320ms cubic-bezier(0.16,1,0.3,1) both',
+              transition: 'height 300ms cubic-bezier(0.16,1,0.3,1), border-radius 300ms cubic-bezier(0.16,1,0.3,1)',
             }}>
               {/* Drag handle bar */}
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                height: 44, flexShrink: 0,
-                background: 'var(--bg-panel)',
-                borderBottom: '1px solid var(--border)',
-                position: 'relative',
-                cursor: 'default',
-              }}>
+              <div
+                onTouchStart={onHandleTouchStart}
+                onTouchMove={onHandleTouchMove}
+                onTouchEnd={onHandleTouchEnd}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  height: 44, flexShrink: 0,
+                  background: 'var(--bg-panel)',
+                  borderBottom: '1px solid var(--border)',
+                  position: 'relative',
+                  cursor: 'grab',
+                  touchAction: 'none',
+                }}>
                 <div style={{
                   width: 32, height: 4,
                   borderRadius: 2,
                   background: 'rgba(255,255,255,0.15)',
                 }} />
                 <button
-                  onClick={() => setPanelOpen(false)}
+                  onClick={() => { setPanelOpen(false); setSheetFull(false) }}
                   style={{
                     position: 'absolute', right: 14,
                     width: 30, height: 30,
