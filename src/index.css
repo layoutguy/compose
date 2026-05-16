@@ -15,8 +15,8 @@
   --text-secondary: #58585E;
   --text-tertiary: #38383E;
 
-  --accent-blue: #4F7FD9;
-  --accent-blue-glow: rgba(79, 127, 217, 0.20);
+  --accent-blue: #0057C8;
+  --accent-blue-glow: rgba(0, 87, 200, 0.20);
   --accent-green: #4DB882;
 
   --export-bg: #E2D9C2;
@@ -171,12 +171,12 @@ input {
   border-radius: 1px;
   cursor: ew-resize;
   margin-top: 0;
-  box-shadow: 0 0 6px rgba(79, 127, 217, 0.5);
+  box-shadow: 0 0 6px rgba(0, 87, 200, 0.5);
   transition: box-shadow var(--t-fast) var(--ease-out);
 }
 
 .precision-slider:active::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px rgba(79, 127, 217, 0.15), 0 0 12px rgba(79, 127, 217, 0.6);
+  box-shadow: 0 0 0 3px rgba(0, 87, 200, 0.15), 0 0 12px rgba(0, 87, 200, 0.6);
 }
 
 .precision-slider::-moz-range-track {
@@ -199,7 +199,7 @@ input {
   border: none;
   border-radius: 1px;
   cursor: ew-resize;
-  box-shadow: 0 0 6px rgba(79, 127, 217, 0.5);
+  box-shadow: 0 0 6px rgba(0, 87, 200, 0.5);
 }
 
 .precision-slider:focus {

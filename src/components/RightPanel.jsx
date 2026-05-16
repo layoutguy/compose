@@ -228,9 +228,9 @@ function ArtboardDimInput({ axis, value, onChange }) {
       minWidth: 0, // grid cell must opt out of min-width:auto or it overflows
       display: 'flex', alignItems: 'center', gap: 5,
       height: 32, padding: '0 8px',
-      border: `1px solid ${focused || dragging ? 'rgba(79,127,217,0.55)' : 'var(--border-input)'}`,
+      border: `1px solid ${focused || dragging ? 'rgba(0,87,200,0.55)' : 'var(--border-input)'}`,
       borderRadius: 'var(--radius-sm)',
-      background: focused || dragging ? 'rgba(79,127,217,0.06)' : 'var(--bg-input)',
+      background: focused || dragging ? 'rgba(0,87,200,0.06)' : 'var(--bg-input)',
       transition: 'border-color 140ms, background 0.12s',
       overflow: 'hidden',
     }}>
@@ -240,7 +240,7 @@ function ArtboardDimInput({ axis, value, onChange }) {
         title={`Drag to scrub ${axis}`}
         style={{
           fontSize: 10, fontWeight: 700,
-          color: focused || dragging ? 'rgba(79,127,217,0.9)' : 'var(--text-tertiary)',
+          color: focused || dragging ? 'rgba(0,87,200,0.9)' : 'var(--text-tertiary)',
           letterSpacing: '0.05em', flexShrink: 0,
           cursor: 'ew-resize', userSelect: 'none',
           transition: 'color 0.12s',
@@ -340,9 +340,9 @@ function ScrubInput({ label, value, onChange, min = 0, max = 9999, step = 1, uni
     <div style={{
       display: 'flex', alignItems: 'stretch',
       height: 32,
-      border: `1px solid ${active ? 'rgba(79,127,217,0.55)' : 'var(--border-input)'}`,
+      border: `1px solid ${active ? 'rgba(0,87,200,0.55)' : 'var(--border-input)'}`,
       borderRadius: 'var(--radius-sm)',
-      background: active ? 'rgba(79,127,217,0.06)' : 'var(--bg-input)',
+      background: active ? 'rgba(0,87,200,0.06)' : 'var(--bg-input)',
       overflow: 'hidden',
       transition: 'border-color 140ms, background 0.12s',
     }}>
@@ -354,9 +354,9 @@ function ScrubInput({ label, value, onChange, min = 0, max = 9999, step = 1, uni
           display: 'flex', alignItems: 'center',
           padding: '0 10px',
           fontSize: 11, fontWeight: 500, letterSpacing: '0.02em',
-          color: active ? 'rgba(79,127,217,0.9)' : 'var(--text-secondary)',
-          borderRight: `1px solid ${active ? 'rgba(79,127,217,0.2)' : 'var(--border)'}`,
-          background: active ? 'rgba(79,127,217,0.05)' : 'rgba(255,255,255,0.015)',
+          color: active ? 'rgba(0,87,200,0.9)' : 'var(--text-secondary)',
+          borderRight: `1px solid ${active ? 'rgba(0,87,200,0.2)' : 'var(--border)'}`,
+          background: active ? 'rgba(0,87,200,0.05)' : 'rgba(255,255,255,0.015)',
           cursor: 'ew-resize', userSelect: 'none', flexShrink: 0,
           transition: 'color 140ms, background 140ms, border-color 0.12s',
         }}>
@@ -392,7 +392,7 @@ function ScrubInput({ label, value, onChange, min = 0, max = 9999, step = 1, uni
         <span style={{
           display: 'flex', alignItems: 'center',
           paddingRight: 9, fontSize: 10,
-          color: active ? 'rgba(79,127,217,0.6)' : 'var(--text-tertiary)',
+          color: active ? 'rgba(0,87,200,0.6)' : 'var(--text-tertiary)',
           flexShrink: 0,
           transition: 'color 0.12s',
         }}>
@@ -431,8 +431,8 @@ function SegmentRow({ items, active, onSelect, cols }) {
           <button key={String(value)} onClick={() => onSelect(value)} style={{
             height: 28, borderRadius: 'var(--radius-sm)',
             fontSize: 10, fontWeight: isActive ? 600 : 400, letterSpacing: '0.04em',
-            border: isActive ? '1px solid rgba(79,127,217,0.6)' : '1px solid var(--border-input)',
-            background: isActive ? 'rgba(79,127,217,0.12)' : 'var(--bg-input)',
+            border: isActive ? '1px solid rgba(0,87,200,0.6)' : '1px solid var(--border-input)',
+            background: isActive ? 'rgba(0,87,200,0.12)' : 'var(--bg-input)',
             color: isActive ? 'var(--accent-blue)' : 'var(--text-tertiary)',
             transition: 'color 0.1s, background 0.1s, border-color 0.1s', cursor: 'pointer',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
@@ -721,8 +721,8 @@ export default function RightPanel({ sheetMode = false }) {
                 style={{
                   height: 26, borderRadius: 'var(--radius-sm)',
                   fontSize: 10, fontWeight: a ? 600 : 400, letterSpacing: '0.04em',
-                  border: a ? '1px solid rgba(79,127,217,0.6)' : '1px solid var(--border-input)',
-                  background: a ? 'rgba(79,127,217,0.12)' : 'var(--bg-input)',
+                  border: a ? '1px solid rgba(0,87,200,0.6)' : '1px solid var(--border-input)',
+                  background: a ? 'rgba(0,87,200,0.12)' : 'var(--bg-input)',
                   color: a ? 'var(--accent-blue)' : 'var(--text-tertiary)',
                   transition: 'all 0.1s', cursor: 'pointer',
                 }}
@@ -747,8 +747,8 @@ export default function RightPanel({ sheetMode = false }) {
                 style={{
                   height: 26, borderRadius: 'var(--radius-sm)',
                   fontSize: 9, fontWeight: a ? 600 : 400, letterSpacing: '0.03em',
-                  border: a ? '1px solid rgba(79,127,217,0.6)' : '1px solid var(--border-input)',
-                  background: a ? 'rgba(79,127,217,0.12)' : 'var(--bg-input)',
+                  border: a ? '1px solid rgba(0,87,200,0.6)' : '1px solid var(--border-input)',
+                  background: a ? 'rgba(0,87,200,0.12)' : 'var(--bg-input)',
                   color: a ? 'var(--accent-blue)' : 'var(--text-tertiary)',
                   transition: 'all 0.1s', cursor: 'pointer',
                   whiteSpace: 'nowrap',
@@ -921,8 +921,8 @@ export default function RightPanel({ sheetMode = false }) {
                   style={{
                     height: 32, padding: '0 12px', flexShrink: 0,
                     borderRadius: 'var(--radius-sm)',
-                    border: !logo.tintColor ? '1px solid rgba(79,127,217,0.6)' : '1px solid var(--border-input)',
-                    background: !logo.tintColor ? 'rgba(79,127,217,0.12)' : 'var(--bg-input)',
+                    border: !logo.tintColor ? '1px solid rgba(0,87,200,0.6)' : '1px solid var(--border-input)',
+                    background: !logo.tintColor ? 'rgba(0,87,200,0.12)' : 'var(--bg-input)',
                     fontSize: 11, fontWeight: !logo.tintColor ? 600 : 400,
                     color: !logo.tintColor ? 'var(--accent-blue)' : 'rgba(255,255,255,0.45)',
                     cursor: 'pointer',
@@ -934,7 +934,7 @@ export default function RightPanel({ sheetMode = false }) {
                   Original
                 </button>
                 {/* Color swatch — activates tint */}
-                <div style={{ flex: 1, position: 'relative', height: 32, borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: logo.tintColor ? '1px solid rgba(79,127,217,0.6)' : '1px solid var(--border-input)' }}>
+                <div style={{ flex: 1, position: 'relative', height: 32, borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: logo.tintColor ? '1px solid rgba(0,87,200,0.6)' : '1px solid var(--border-input)' }}>
                   <div style={{ position: 'absolute', inset: 0, background: logo.tintColor ?? '#FFFFFF', transition: 'background 120ms' }} />
                   <div style={{
                     position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', paddingLeft: 10,
@@ -1009,8 +1009,8 @@ export default function RightPanel({ sheetMode = false }) {
                 <button key={fmt} onClick={() => setExportOption('format', fmt)} style={{
                   height: 28, borderRadius: 'var(--radius-sm)',
                   fontSize: 10, fontWeight: a ? 600 : 400, letterSpacing: '0.05em', textTransform: 'uppercase',
-                  border: a ? '1px solid rgba(79,127,217,0.6)' : '1px solid var(--border-input)',
-                  background: a ? 'rgba(79,127,217,0.12)' : 'var(--bg-input)',
+                  border: a ? '1px solid rgba(0,87,200,0.6)' : '1px solid var(--border-input)',
+                  background: a ? 'rgba(0,87,200,0.12)' : 'var(--bg-input)',
                   color: a ? 'var(--accent-blue)' : 'var(--text-tertiary)',
                   transition: 'all 0.1s', cursor: 'pointer',
                 }}
@@ -1033,8 +1033,8 @@ export default function RightPanel({ sheetMode = false }) {
                   <button key={s} onClick={() => setExportOption('scale', s)} style={{
                     height: 28, borderRadius: 'var(--radius-sm)',
                     fontSize: 11, fontWeight: a ? 600 : 400,
-                    border: a ? '1px solid rgba(79,127,217,0.6)' : '1px solid var(--border-input)',
-                    background: a ? 'rgba(79,127,217,0.12)' : 'var(--bg-input)',
+                    border: a ? '1px solid rgba(0,87,200,0.6)' : '1px solid var(--border-input)',
+                    background: a ? 'rgba(0,87,200,0.12)' : 'var(--bg-input)',
                     color: a ? 'var(--accent-blue)' : 'var(--text-tertiary)',
                     transition: 'all 0.1s', cursor: 'pointer',
                   }}

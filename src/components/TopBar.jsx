@@ -71,8 +71,8 @@ export default function TopBar({ isMobile = false, panelOpen = false, onTogglePa
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               width: 34, height: 34,
               borderRadius: 'var(--radius-md)',
-              background: panelOpen ? 'rgba(79,127,217,0.15)' : 'rgba(255,255,255,0.05)',
-              border: `1px solid ${panelOpen ? 'rgba(79,127,217,0.4)' : 'transparent'}`,
+              background: panelOpen ? 'rgba(0,87,200,0.15)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${panelOpen ? 'rgba(0,87,200,0.4)' : 'transparent'}`,
               color: panelOpen ? 'var(--accent-blue)' : 'var(--text-secondary)',
               transition: 'background 140ms, color 140ms, border-color 140ms',
             }}

@@ -35,7 +35,7 @@ function LogoHandles({ rect, visible, onHandleMouseDown, touch = false }) {
     }}>
       <div style={{
         position: 'absolute', inset: 0,
-        outline: '1px dashed rgba(79,127,217,0.55)',
+        outline: '1px dashed rgba(0,87,200,0.55)',
         pointerEvents: 'none',
       }} />
       {HANDLES.map(h => (
@@ -57,7 +57,7 @@ function LogoHandles({ rect, visible, onHandleMouseDown, touch = false }) {
         >
           <div style={{
             width: visSize, height: visSize,
-            border: '1.5px solid rgba(79,127,217,0.9)',
+            border: '1.5px solid rgba(0,87,200,0.9)',
             background: '#0A0A0C',
             borderRadius: 2,
             boxShadow: '0 1px 4px rgba(0,0,0,0.6)',
@@ -163,15 +163,15 @@ function DropOverlay() {
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
         padding: '36px 56px',
-        border: '1.5px dashed rgba(79,127,217,0.55)',
+        border: '1.5px dashed rgba(0,87,200,0.55)',
         borderRadius: 'var(--radius-xl)',
       }}>
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
           <path d="M14 20V8M14 8L9 13M14 8L19 13"
-            stroke="rgba(79,127,217,0.9)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M4 22v1.5h20V22" stroke="rgba(79,127,217,0.9)" strokeWidth="1.5" strokeLinecap="round" />
+            stroke="rgba(0,87,200,0.9)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M4 22v1.5h20V22" stroke="rgba(0,87,200,0.9)" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
-        <span style={{ fontSize: 12, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(79,127,217,0.9)' }}>
+        <span style={{ fontSize: 12, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(0,87,200,0.9)' }}>
           Drop logo here
         </span>
         <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.04em' }}>SVG or PNG</span>

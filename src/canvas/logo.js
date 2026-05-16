@@ -166,21 +166,21 @@ export function renderLogoGuides(ctx, dpr, fitScale, grid, layout, img, logo, di
 
   // ── 3. Anchor ring ─────────────────────────────────────────────────────────
   // Outer ring (the grid snap point)
-  ctx.strokeStyle = 'rgba(79,127,217,0.65)'
+  ctx.strokeStyle = 'rgba(0,87,200,0.65)'
   ctx.lineWidth   = px(1)
   ctx.beginPath()
   ctx.arc(ax, ay, px(4), 0, Math.PI * 2)
   ctx.stroke()
 
   // Inner dot
-  ctx.fillStyle = 'rgba(79,127,217,0.85)'
+  ctx.fillStyle = 'rgba(0,87,200,0.85)'
   ctx.beginPath()
   ctx.arc(ax, ay, px(1.5), 0, Math.PI * 2)
   ctx.fill()
 
   // ── 4. Crosshair hairlines through anchor (SNAP mode only) ────────────────
   if (showGuides) {
-    ctx.strokeStyle = 'rgba(79,127,217,0.09)'
+    ctx.strokeStyle = 'rgba(0,87,200,0.09)'
     ctx.lineWidth   = px(0.75)
     ctx.setLineDash([px(5), px(8)])
 
@@ -208,7 +208,7 @@ export function renderLogoGuides(ctx, dpr, fitScale, grid, layout, img, logo, di
   const tickGap   = px(2)
   const threshold = px(1.5)
 
-  ctx.strokeStyle = 'rgba(79,127,217,0.30)'
+  ctx.strokeStyle = 'rgba(0,87,200,0.30)'
   ctx.lineWidth   = px(0.75)
   ctx.beginPath()
 

@@ -48,10 +48,10 @@ export default function ShapePicker({ value, onChange }) {
               height: 32,
               borderRadius: 'var(--radius-sm)',
               border: active
-                ? '1px solid rgba(79,127,217,0.6)'
+                ? '1px solid rgba(0,87,200,0.6)'
                 : '1px solid var(--border-input)',
               background: active
-                ? 'rgba(79,127,217,0.12)'
+                ? 'rgba(0,87,200,0.12)'
                 : 'var(--bg-input)',
               color: active
                 ? 'var(--accent-blue)'

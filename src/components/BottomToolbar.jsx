@@ -251,9 +251,9 @@ export default function BottomToolbar() {
             }}
             onMouseEnter={e => {
               e.currentTarget.style.color = 'rgba(255,255,255,0.92)'
-              e.currentTarget.style.borderColor = 'rgba(79,127,217,0.7)'
-              e.currentTarget.style.background = 'rgba(79,127,217,0.08)'
-              e.currentTarget.style.boxShadow = '0 0 0 1px rgba(79,127,217,0.2), 0 0 14px 3px rgba(79,127,217,0.2), 0 0 32px 6px rgba(79,127,217,0.08)'
+              e.currentTarget.style.borderColor = 'rgba(0,87,200,0.7)'
+              e.currentTarget.style.background = 'rgba(0,87,200,0.08)'
+              e.currentTarget.style.boxShadow = '0 0 0 1px rgba(0,87,200,0.2), 0 0 14px 3px rgba(0,87,200,0.2), 0 0 32px 6px rgba(0,87,200,0.08)'
             }}
             onMouseLeave={e => {
               e.currentTarget.style.color = 'var(--text-secondary)'
@@ -279,7 +279,7 @@ export default function BottomToolbar() {
             >
               <div style={{
                 width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
-                background: display.showGuides ? 'var(--accent-blue)' : 'rgba(79,127,217,0.4)',
+                background: display.showGuides ? 'var(--accent-blue)' : 'rgba(0,87,200,0.4)',
                 boxShadow: display.showGuides ? '0 0 6px var(--accent-blue-glow)' : 'none',
                 transition: 'background 0.2s, box-shadow 0.2s',
               }} />
@@ -357,15 +357,15 @@ export default function BottomToolbar() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           width: 46, height: 46, flexShrink: 0,
           borderRadius: 'var(--radius-xl)',
-          background: '#4F7FD9',
-          border: '1px solid #6E9AE8',
+          background: '#0057C8',
+          border: '1px solid #3375D9',
           color: '#fff',
           boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
           pointerEvents: 'all',
           transition: 'background 140ms, transform 120ms',
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#6090E4'; e.currentTarget.querySelector('svg').style.transform = 'scale(1.18)' }}
-        onMouseLeave={e => { e.currentTarget.style.background = '#4F7FD9'; e.currentTarget.querySelector('svg').style.transform = 'scale(1)' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1A6BD9'; e.currentTarget.querySelector('svg').style.transform = 'scale(1.18)' }}
+        onMouseLeave={e => { e.currentTarget.style.background = '#0057C8'; e.currentTarget.querySelector('svg').style.transform = 'scale(1)' }}
         onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.88) rotate(20deg)' }}
         onMouseUp={e => { e.currentTarget.style.transform = 'scale(1) rotate(0deg)' }}
       >
