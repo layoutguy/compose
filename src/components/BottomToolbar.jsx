@@ -276,10 +276,12 @@ export default function BottomToolbar() {
               active={display.showGuides}
               onClick={() => toggleDisplay('showGuides')}
               title={display.showGuides ? 'Snap off' : 'Snap on'}
+              hoverColor="rgba(0,87,200,0.9)"
+              hoverBg="rgba(0,87,200,0.08)"
             >
               <div style={{
                 width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
-                background: display.showGuides ? 'var(--accent-blue)' : 'rgba(0,87,200,0.4)',
+                background: display.showGuides ? 'var(--accent-blue)' : 'rgba(255,255,255,0.25)',
                 boxShadow: display.showGuides ? '0 0 6px var(--accent-blue-glow)' : 'none',
                 transition: 'background 0.2s, box-shadow 0.2s',
               }} />
