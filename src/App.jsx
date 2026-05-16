@@ -26,39 +26,57 @@ export default function App() {
     swipeStartY.current = null
   }, [])
 
-  // Sheet handle drag
-  const onHandleTouchStart = useCallback((e) => {
-    dragRef.current = { startY: e.touches[0].clientY, startFull: sheetFull }
-    const el = sheetRef.current
-    if (el) { el.style.transition = 'none' }
-  }, [sheetFull])
+  // Sheet handle drag — uses RAF + translate3d for GPU-composited smoothness
+  const rafRef = useRef(null)
 
-  const onHandleTouchMove = useCallback((e) => {
-    if (!dragRef.current) return
-    const dy = e.touches[0].clientY - dragRef.current.startY
+  const setTranslate = useCallback((el, y, animated) => {
+    el.style.transition = animated ? 'transform 380ms cubic-bezier(0.16,1,0.3,1)' : 'none'
+    el.style.transform  = `translate3d(0,${y}px,0)`
+  }, [])
+
+  const onHandleTouchStart = useCallback((e) => {
+    e.preventDefault()
     const el = sheetRef.current
     if (!el) return
-    // Only allow dragging downward (positive dy) to dismiss, or upward to expand
+    dragRef.current = { startY: e.touches[0].clientY, lastY: e.touches[0].clientY, vel: 0 }
+    setTranslate(el, 0, false)
+  }, [setTranslate])
+
+  const onHandleTouchMove = useCallback((e) => {
+    e.preventDefault()
+    if (!dragRef.current) return
+    const y = e.touches[0].clientY
+    dragRef.current.vel  = y - dragRef.current.lastY
+    dragRef.current.lastY = y
+    const dy      = y - dragRef.current.startY
     const clamped = Math.max(-window.innerHeight * 0.18, dy)
-    el.style.transform = `translateY(${clamped}px)`
-  }, [])
+    const el = sheetRef.current
+    if (!el) return
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(() => setTranslate(el, clamped, false))
+  }, [setTranslate])
 
   const onHandleTouchEnd = useCallback((e) => {
     if (!dragRef.current) return
-    const dy = e.changedTouches[0].clientY - dragRef.current.startY
-    const el = sheetRef.current
-    if (el) {
-      el.style.transition = 'transform 300ms cubic-bezier(0.16,1,0.3,1)'
-      el.style.transform = 'translateY(0)'
-    }
-    if (dy < -60) {
-      setSheetFull(true)   // dragged up → full screen
-    } else if (dy > 80) {
-      setPanelOpen(false)  // dragged down → dismiss
-      setSheetFull(false)
-    }
+    const el  = sheetRef.current
+    const dy  = e.changedTouches[0].clientY - dragRef.current.startY
+    const vel = dragRef.current.vel
     dragRef.current = null
-  }, [])
+    if (!el) return
+
+    if (dy < -40 || vel < -6) {
+      // Swiped up fast → full screen
+      setTranslate(el, 0, true)
+      setSheetFull(true)
+    } else if (dy > 60 || vel > 8) {
+      // Swiped down fast → dismiss
+      setTranslate(el, window.innerHeight, true)
+      setTimeout(() => { setPanelOpen(false); setSheetFull(false); setTranslate(el, 0, false) }, 360)
+    } else {
+      // Not enough → snap back
+      setTranslate(el, 0, true)
+    }
+  }, [setTranslate])
 
   return (
     <CompositionProvider>
@@ -127,7 +145,8 @@ export default function App() {
               overflow: 'hidden',
               boxShadow: '0 -8px 48px rgba(0,0,0,0.7)',
               animation: 'sheetSlideUp 320ms cubic-bezier(0.16,1,0.3,1) both',
-              transition: 'height 300ms cubic-bezier(0.16,1,0.3,1), border-radius 300ms cubic-bezier(0.16,1,0.3,1)',
+              transition: 'height 380ms cubic-bezier(0.16,1,0.3,1), border-radius 380ms cubic-bezier(0.16,1,0.3,1)',
+              willChange: 'transform',
             }}>
               {/* Drag handle bar */}
               <div
