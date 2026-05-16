@@ -403,14 +403,25 @@ function ScrubInput({ label, value, onChange, min = 0, max = 9999, step = 1, uni
   )
 }
 
+function hexContrast(hex) {
+  const h = hex.replace('#', '')
+  const r = parseInt(h.slice(0, 2), 16)
+  const g = parseInt(h.slice(2, 4), 16)
+  const b = parseInt(h.slice(4, 6), 16)
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return lum > 0.45 ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.65)'
+}
+
 function ColorSwatch({ value, onChange }) {
+  const textColor = hexContrast(value ?? '#000000')
   return (
     <div style={{ position: 'relative', height: 32, borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border-input)' }}>
       <div style={{ position: 'absolute', inset: 0, background: value, transition: 'background 120ms cubic-bezier(0.25,0,0,1)' }} />
       <div style={{
         position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', paddingLeft: 10,
         fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase',
-        color: 'rgba(0,0,0,0.4)', pointerEvents: 'none', userSelect: 'none',
+        color: textColor, pointerEvents: 'none', userSelect: 'none',
+        transition: 'color 120ms',
       }}>
         {value}
       </div>
@@ -939,7 +950,8 @@ export default function RightPanel({ sheetMode = false }) {
                   <div style={{
                     position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', paddingLeft: 10,
                     fontSize: 11, fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase',
-                    color: 'rgba(0,0,0,0.4)', pointerEvents: 'none', userSelect: 'none',
+                    color: hexContrast(logo.tintColor ?? '#FFFFFF'), pointerEvents: 'none', userSelect: 'none',
+                    transition: 'color 120ms',
                   }}>
                     {logo.tintColor ?? '#FFFFFF'}
                   </div>
