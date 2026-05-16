@@ -40,7 +40,7 @@ const PlusIcon = () => (
 )
 
 const DiceIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 15 15" fill="none" style={{ display: 'block', marginLeft: 2, marginTop: -1 }}>
+  <svg width="18" height="18" viewBox="0 0 15 15" fill="none" style={{ display: 'block', marginLeft: 2, marginTop: -1 }}>
     <rect x="1" y="1" width="13" height="13" rx="2.5" stroke="currentColor" strokeWidth="1.2"/>
     <circle cx="4.5" cy="4.5" r="1" fill="currentColor"/>
     <circle cx="10.5" cy="4.5" r="1" fill="currentColor"/>
