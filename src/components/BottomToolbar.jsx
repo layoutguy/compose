@@ -186,7 +186,7 @@ export default function BottomToolbar() {
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               padding: '0 17px',
-              height: 46, margin: '0 -6px',
+              height: 46, margin: '0 -10px',
               borderRadius: 999,
               fontSize: 11, fontWeight: 500,
               letterSpacing: '0.04em', textTransform: 'uppercase',
