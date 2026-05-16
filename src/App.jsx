@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { CompositionProvider } from './context/CompositionContext'
 import TopBar from './components/TopBar'
 import CanvasArea from './components/CanvasArea'
@@ -10,6 +10,18 @@ import './index.css'
 export default function App() {
   const isMobile   = useIsMobile()
   const [panelOpen, setPanelOpen] = useState(false)
+
+  // Swipe-up to open panel on mobile
+  const swipeStartY = useRef(null)
+  const onTouchStart = useCallback((e) => {
+    swipeStartY.current = e.touches[0].clientY
+  }, [])
+  const onTouchEnd = useCallback((e) => {
+    if (swipeStartY.current === null) return
+    const dy = swipeStartY.current - e.changedTouches[0].clientY
+    if (dy > 60) setPanelOpen(true)   // upward swipe > 60px opens panel
+    swipeStartY.current = null
+  }, [])
 
   return (
     <CompositionProvider>
@@ -32,14 +44,18 @@ export default function App() {
           overflow: 'hidden',
           minHeight: 0,
         }}>
-          <div style={{
-            flex: 1,
-            position: 'relative',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            minWidth: 0,
-          }}>
+          <div
+            style={{
+              flex: 1,
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              minWidth: 0,
+            }}
+            onTouchStart={isMobile ? onTouchStart : undefined}
+            onTouchEnd={isMobile ? onTouchEnd : undefined}
+          >
             <CanvasArea />
             <BottomToolbar />
           </div>
