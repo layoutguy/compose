@@ -206,30 +206,6 @@ export default function BottomToolbar() {
       display: 'flex', alignItems: 'center', gap: 10,
     }}>
 
-      {/* Standalone shuffle button */}
-      <button
-        onClick={handleShuffle}
-        title="Shuffle — randomise grid, dots and logo"
-        pointerEvents="all"
-        style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: 46, height: 46, flexShrink: 0,
-          borderRadius: 'var(--radius-xl)',
-          background: '#4F7FD9',
-          border: '1px solid #6E9AE8',
-          color: '#fff',
-          boxShadow: '0 0 12px rgba(79,127,217,0.45), 0 8px 32px rgba(0,0,0,0.4)',
-          pointerEvents: 'all',
-          transition: 'background 140ms, box-shadow 140ms, transform 120ms',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#6090E4'; e.currentTarget.style.boxShadow = '0 0 22px rgba(79,127,217,0.65), 0 8px 32px rgba(0,0,0,0.4)' }}
-        onMouseLeave={e => { e.currentTarget.style.background = '#4F7FD9'; e.currentTarget.style.boxShadow = '0 0 12px rgba(79,127,217,0.45), 0 8px 32px rgba(0,0,0,0.4)' }}
-        onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.88) rotate(20deg)' }}
-        onMouseUp={e => { e.currentTarget.style.transform = 'scale(1) rotate(0deg)' }}
-      >
-        <DiceIcon />
-      </button>
-
       {/* Toolbar pill */}
       <div style={{
         display: 'flex', alignItems: 'center',
@@ -372,6 +348,29 @@ export default function BottomToolbar() {
         )}
 
       </div>
+
+      {/* Standalone shuffle button */}
+      <button
+        onClick={handleShuffle}
+        title="Shuffle — randomise grid, dots and logo"
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 46, height: 46, flexShrink: 0,
+          borderRadius: 'var(--radius-xl)',
+          background: '#4F7FD9',
+          border: '1px solid #6E9AE8',
+          color: '#fff',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          pointerEvents: 'all',
+          transition: 'background 140ms, transform 120ms',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#6090E4' }}
+        onMouseLeave={e => { e.currentTarget.style.background = '#4F7FD9' }}
+        onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.88) rotate(20deg)' }}
+        onMouseUp={e => { e.currentTarget.style.transform = 'scale(1) rotate(0deg)' }}
+      >
+        <DiceIcon />
+      </button>
     </div>
   )
 }
