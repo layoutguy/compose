@@ -715,7 +715,7 @@ export default function CanvasArea() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'radial-gradient(ellipse 80% 70% at 50% 50%, #14141A 0%, #0A0A0C 100%)',
+        background: 'radial-gradient(ellipse 80% 70% at 50% 50%, hsl(48,13%,9%) 0%, hsl(48,9%,4%) 100%)',
         overflow: 'hidden',
         minHeight: 0,
         position: 'relative',
