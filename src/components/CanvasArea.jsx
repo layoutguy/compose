@@ -121,10 +121,10 @@ function UndoRedoControls({ onUndo, onRedo, canUndo, canRedo }) {
   )
 }
 
-function ZoomControls({ percent, onZoomIn, onZoomOut, onFit }) {
+function ZoomControls({ percent, onZoomIn, onZoomOut, onFit, isMobile }) {
   return (
     <div style={{
-      position: 'absolute', bottom: 14, right: 14,
+      position: 'absolute', bottom: 14, ...(isMobile ? { left: 14 } : { right: 14 }),
       display: 'flex', alignItems: 'center',
       height: 30,
       background: 'var(--bg-overlay)',
@@ -810,7 +810,7 @@ export default function CanvasArea() {
       </div>
 
       <UndoRedoControls onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} />
-      <ZoomControls percent={percent} onZoomIn={zoomIn} onZoomOut={zoomOut} onFit={resetView} />
+      <ZoomControls percent={percent} onZoomIn={zoomIn} onZoomOut={zoomOut} onFit={resetView} isMobile={isTouchDevice} />
       {isDragOver && <DropOverlay />}
     </div>
   )

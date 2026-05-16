@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback } from 'react'
 import { useComposition } from '../hooks/useComposition'
+import { useIsMobile } from '../hooks/useIsMobile'
 import PositionPicker from './ui/PositionPicker'
 import { triggerTransition } from '../hooks/useCanvasTransition'
 import { computeGridLayout } from '../canvas/grid'
@@ -147,6 +148,7 @@ export default function BottomToolbar() {
     grid, setGridParam, setDotParam, advanced,
   } = useComposition()
 
+  const isMobile = useIsMobile()
   const fileInputRef       = useRef(null)
   const [posOpen, setPosOpen] = useState(false)
   const posAnchorRef       = useRef(null)
@@ -201,7 +203,10 @@ export default function BottomToolbar() {
     <div style={{
       position: 'absolute',
       bottom: 'max(24px, calc(env(safe-area-inset-bottom, 0px) + 12px))',
-      left: '50%', transform: 'translateX(-50%)',
+      ...(isMobile
+        ? { right: 14, left: 'auto', transform: 'none' }
+        : { left: '50%', transform: 'translateX(-50%)' }
+      ),
       zIndex: 30, pointerEvents: 'none',
       display: 'flex', alignItems: 'center', gap: 10,
     }}>
