@@ -124,7 +124,9 @@ function UndoRedoControls({ onUndo, onRedo, canUndo, canRedo }) {
 function ZoomControls({ percent, onZoomIn, onZoomOut, onFit, isMobile }) {
   return (
     <div style={{
-      position: 'absolute', bottom: 14, ...(isMobile ? { left: 14 } : { right: 14 }),
+      position: 'absolute',
+      bottom: isMobile ? 'max(24px, calc(env(safe-area-inset-bottom, 0px) + 12px))' : 14,
+      ...(isMobile ? { left: 14 } : { right: 14 }),
       display: 'flex', alignItems: 'center',
       height: 30,
       background: 'var(--bg-overlay)',
