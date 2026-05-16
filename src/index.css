@@ -30,7 +30,7 @@
 
   --panel-width: 300px;
   --topbar-height: 64px;
-  --statusbar-height: 40px;
+  --statusbar-height: 0px;
 
   --radius-xs: 3px;
   --radius-sm: 5px;

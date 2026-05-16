@@ -1,3 +1,6 @@
+import { useComposition } from '../hooks/useComposition'
+import { computeGridLayout } from '../canvas/grid'
+
 // Full Orbital Compose logo lockup v3 (single-line horizontal lockup)
 const OrbitalComposeLogo = () => (
   <svg width="169" height="28" viewBox="0 0 753.42 124.68" fill="currentColor" style={{ color: 'var(--text-primary)' }}>
@@ -25,14 +28,12 @@ const OrbitalComposeLogo = () => (
   </svg>
 )
 
-// Icon-only mark for mobile (just the concentric rings)
 const OrbitalMark = () => (
   <svg width="26" height="26" viewBox="0 0 124.68 124.68" fill="currentColor" style={{ color: 'var(--text-primary)' }}>
     <path d="M62.34,0C27.96,0,0,27.96,0,62.34s27.96,62.34,62.34,62.34,62.34-27.96,62.34-62.34S96.71,0,62.34,0ZM62.34,9c29.41,0,53.34,23.93,53.34,53.34,0,8.12-1.83,15.83-5.1,22.73.61-3.1.94-6.3.94-9.57,0-25.68-21.03-54.4-49.18-54.4S13.15,49.81,13.15,75.49c0,3.27.33,6.47.94,9.57-3.26-6.9-5.1-14.6-5.1-22.73,0-29.41,23.93-53.34,53.34-53.34ZM39.5,103.08c-2.65-4.18-4.19-9.13-4.19-14.43,0-16.36,13.11-37.46,27.03-37.46s27.03,21.11,27.03,37.46c0,5.3-1.54,10.25-4.19,14.43.02-.42.04-.85.04-1.28,0-11.44-8.88-38.53-22.88-38.53s-22.88,27.09-22.88,38.53c0,.43.01.85.04,1.28ZM62.34,42.18c-20.9,0-36.03,27.75-36.03,46.46,0,1.84.14,3.64.41,5.41-2.91-5.56-4.56-11.87-4.56-18.56,0-21.43,17.18-45.4,40.18-45.4s40.18,23.97,40.18,45.4c0,6.69-1.65,13-4.56,18.56.27-1.76.41-3.57.41-5.41,0-18.71-15.13-46.46-36.03-46.46ZM48.46,101.8c0-10.17,8.29-29.53,13.88-29.53s13.88,19.36,13.88,29.53c0,7.65-6.22,13.88-13.88,13.88s-13.88-6.22-13.88-13.88Z"/>
   </svg>
 )
 
-// Settings / panel toggle icon
 const PanelIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
     <rect x="1.5" y="1.5" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="1.2"/>
@@ -43,7 +44,38 @@ const PanelIcon = () => (
   </svg>
 )
 
+function Pipe() {
+  return <div style={{ width: 1, height: 12, background: 'var(--border-strong)', flexShrink: 0 }} />
+}
+
+function Stat({ label, value, muted }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+      {label && <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{label}</span>}
+      <span style={{
+        fontSize: 11,
+        color: muted ? 'var(--text-secondary)' : 'var(--text-primary)',
+        fontVariantNumeric: 'tabular-nums',
+      }}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
 export default function TopBar({ isMobile = false, panelOpen = false, onTogglePanel }) {
+  const { grid, logo, display, advanced, layout: layoutProp } = useComposition?.() ?? {}
+  const layout = (grid && advanced)
+    ? computeGridLayout(grid, { outputW: advanced.outputW, outputH: advanced.outputH })
+    : null
+
+  const integrityColor = layout ? ({
+    excellent:  '#34C463',
+    acceptable: '#E8B84B',
+    poor:       '#E85454',
+    'n/a':      'rgba(255,255,255,0.2)',
+  }[layout.integrity] ?? 'rgba(255,255,255,0.2)') : null
+
   return (
     <div style={{
       height: 'var(--topbar-height)',
@@ -56,13 +88,49 @@ export default function TopBar({ isMobile = false, panelOpen = false, onTogglePa
       zIndex: 20,
     }}>
 
-      {/* Left: logo (full lockup on desktop, icon mark on mobile) */}
+      {/* Left: logo */}
       {isMobile ? <OrbitalMark /> : <OrbitalComposeLogo />}
 
-      {/* Right */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      {/* Centre: stats (desktop only) */}
+      {!isMobile && layout && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+          <span style={{ fontSize: 11, color: logo?.url ? 'var(--text-secondary)' : 'var(--text-tertiary)' }}>
+            {logo?.name ?? 'No logo'}
+          </span>
+          <Pipe />
+          <Stat label="Grid" value={`${grid.cols} × ${grid.rows}`} />
+          <Pipe />
+          <Stat value={`${layout.dotCount} dots`} muted />
+          <Pipe />
+          <Stat label="H" value={`${Math.round(layout.spacingX)}px`} muted />
+          <Stat label="V" value={`${Math.round(layout.spacingY)}px`} muted />
+          <Pipe />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
+            <div style={{
+              width: 5, height: 5, borderRadius: '50%',
+              background: integrityColor,
+              boxShadow: layout.integrity !== 'n/a' ? `0 0 5px ${integrityColor}` : 'none',
+              flexShrink: 0, transition: 'background 0.2s, box-shadow 0.2s',
+            }} />
+            <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
+              {layout.integrity === 'n/a' ? 'Square' : layout.integrity.charAt(0).toUpperCase() + layout.integrity.slice(1)}
+            </span>
+          </div>
+          <Pipe />
+          <Stat label="Margin" value={`${grid.margin}px`} />
+          {!display?.showDots && (
+            <>
+              <Pipe />
+              <span style={{ fontSize: 10, color: 'var(--text-tertiary)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                Dots hidden
+              </span>
+            </>
+          )}
+        </div>
+      )}
 
-        {/* Panel toggle (mobile) or Live Preview badge (desktop) */}
+      {/* Right: Live Preview badge */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {isMobile ? (
           <button
             onClick={onTogglePanel}
@@ -94,7 +162,6 @@ export default function TopBar({ isMobile = false, panelOpen = false, onTogglePa
             Live Preview
           </div>
         )}
-
       </div>
 
     </div>

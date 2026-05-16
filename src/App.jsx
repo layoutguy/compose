@@ -4,7 +4,6 @@ import TopBar from './components/TopBar'
 import CanvasArea from './components/CanvasArea'
 import BottomToolbar from './components/BottomToolbar'
 import RightPanel from './components/RightPanel'
-import StatusBar from './components/StatusBar'
 import { useIsMobile } from './hooks/useIsMobile'
 import './index.css'
 
@@ -48,9 +47,6 @@ export default function App() {
           {/* Desktop: side panel */}
           {!isMobile && <RightPanel />}
         </div>
-
-        {/* Desktop: status bar */}
-        {!isMobile && <StatusBar />}
 
         {/* Mobile: bottom sheet panel */}
         {isMobile && panelOpen && (

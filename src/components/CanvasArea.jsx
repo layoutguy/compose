@@ -71,6 +71,56 @@ function LogoHandles({ rect, visible, onHandleMouseDown, touch = false }) {
 
 // ─── Overlays ─────────────────────────────────────────────────────────────────
 
+const UndoIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+    <path d="M2 5H8.5C10.433 5 12 6.567 12 8.5S10.433 12 8.5 12H5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+    <path d="M4.5 2.5L2 5l2.5 2.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+const RedoIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+    <path d="M12 5H5.5C3.567 5 2 6.567 2 8.5S3.567 12 5.5 12H9" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+    <path d="M9.5 2.5L12 5l-2.5 2.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
+function UndoRedoControls({ onUndo, onRedo, canUndo, canRedo }) {
+  const btnStyle = (enabled) => ({
+    width: 30, height: '100%',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    color: enabled ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.2)',
+    background: 'transparent',
+    transition: 'color 120ms, background 120ms',
+    cursor: enabled ? 'pointer' : 'default',
+  })
+  return (
+    <div style={{
+      position: 'absolute', bottom: 14, right: 110,
+      display: 'flex', alignItems: 'center',
+      height: 30,
+      background: 'var(--bg-overlay)',
+      backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+      border: '1px solid rgba(255,255,255,0.10)',
+      borderRadius: 'var(--radius-md)',
+      boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+      overflow: 'hidden',
+      userSelect: 'none',
+    }}>
+      <button onClick={onUndo} disabled={!canUndo} title="Undo (Ctrl+Z)" style={btnStyle(canUndo)}
+        onMouseEnter={e => { if (canUndo) { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}}
+        onMouseLeave={e => { e.currentTarget.style.color = canUndo ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.2)'; e.currentTarget.style.background = 'transparent' }}>
+        <UndoIcon />
+      </button>
+      <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.08)', flexShrink: 0 }} />
+      <button onClick={onRedo} disabled={!canRedo} title="Redo (Ctrl+Y)" style={btnStyle(canRedo)}
+        onMouseEnter={e => { if (canRedo) { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}}
+        onMouseLeave={e => { e.currentTarget.style.color = canRedo ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.2)'; e.currentTarget.style.background = 'transparent' }}>
+        <RedoIcon />
+      </button>
+    </div>
+  )
+}
+
 function ZoomControls({ percent, onZoomIn, onZoomOut, onFit }) {
   return (
     <div style={{
@@ -195,7 +245,7 @@ export default function CanvasArea() {
   const wrapperRef    = useRef(null)
 
   const { computeLayout, zoom, zoomBy, zoomIn, zoomOut, resetView }  = useViewport()
-  const { grid, display, dot, logo, advanced, setLogoFile, setLogoParam, clearLogo } = useComposition()
+  const { grid, display, dot, logo, advanced, setLogoFile, setLogoParam, clearLogo, undo, redo, canUndo, canRedo } = useComposition()
 
   // ─── Canvas frame dimensions — React-controlled so layout changes immediately ──
   // These drive the canvas element's CSS width/height via JSX (not imperative DOM).
@@ -760,6 +810,7 @@ export default function CanvasArea() {
 
       </div>
 
+      <UndoRedoControls onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} />
       <ZoomControls percent={percent} onZoomIn={zoomIn} onZoomOut={zoomOut} onFit={resetView} />
       {isDragOver && <DropOverlay />}
     </div>
