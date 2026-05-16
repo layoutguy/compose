@@ -128,7 +128,8 @@ function SliderRow({ label, displayValue, min, max, step = 1, value, onChange, c
 
 function OffsetInput({ axis, value, onChange }) {
   const [draft, setDraft] = useState(String(value))
-  useEffect(() => { setDraft(String(value)) }, [value])
+  const liveRef = useRef(value)
+  useEffect(() => { liveRef.current = value; setDraft(String(value)) }, [value])
   const commit = () => {
     const n = parseInt(draft, 10)
     if (!isNaN(n)) onChange?.(n); else setDraft(String(value))
@@ -146,8 +147,8 @@ function OffsetInput({ axis, value, onChange }) {
           if (e.key === 'Enter') { commit(); e.currentTarget.blur() }
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             e.preventDefault()
-            const next = value + (e.key === 'ArrowUp' ? 1 : -1)
-            setDraft(String(next)); onChange?.(next)
+            const next = liveRef.current + (e.key === 'ArrowUp' ? 1 : -1)
+            liveRef.current = next; setDraft(String(next)); onChange?.(next)
           }
         }}
         style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none', fontSize: 12, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }} />
@@ -158,7 +159,8 @@ function OffsetInput({ axis, value, onChange }) {
 
 function NumberInput({ axis, value, onChange, unit = '' }) {
   const [draft, setDraft] = useState(String(value))
-  useEffect(() => { setDraft(String(value)) }, [value])
+  const liveRef = useRef(value)
+  useEffect(() => { liveRef.current = value; setDraft(String(value)) }, [value])
   const commit = () => {
     const n = parseInt(draft, 10)
     if (!isNaN(n) && n > 0) onChange?.(n); else setDraft(String(value))
@@ -176,8 +178,8 @@ function NumberInput({ axis, value, onChange, unit = '' }) {
           if (e.key === 'Enter') { commit(); e.currentTarget.blur() }
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             e.preventDefault()
-            const next = Math.max(1, value + (e.key === 'ArrowUp' ? 1 : -1))
-            setDraft(String(next)); onChange?.(next)
+            const next = Math.max(1, liveRef.current + (e.key === 'ArrowUp' ? 1 : -1))
+            liveRef.current = next; setDraft(String(next)); onChange?.(next)
           }
         }}
         style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none', fontSize: 12, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }} />
@@ -200,9 +202,10 @@ function ArtboardDimInput({ axis, value, onChange }) {
   const [dragging, setDragging] = useState(false)
   const debounceRef = useRef(null)
   const dragRef     = useRef(null) // { startX, startValue }
+  const liveRef     = useRef(value)
 
   // Keep draft in sync when value changes externally (e.g. preset click)
-  useEffect(() => { if (!focused && !dragging) setDraft(String(value)) }, [value, focused, dragging])
+  useEffect(() => { liveRef.current = value; if (!focused && !dragging) setDraft(String(value)) }, [value, focused, dragging])
 
   const apply = useCallback((n) => {
     const clamped = Math.max(1, Math.min(32000, n))
@@ -283,8 +286,8 @@ function ArtboardDimInput({ axis, value, onChange }) {
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             e.preventDefault()
             const s = e.shiftKey ? 100 : e.altKey ? 10 : 1
-            const next = Math.max(1, Math.min(32000, value + (e.key === 'ArrowUp' ? s : -s)))
-            setDraft(String(next)); apply(next)
+            const next = Math.max(1, Math.min(32000, liveRef.current + (e.key === 'ArrowUp' ? s : -s)))
+            liveRef.current = next; setDraft(String(next)); apply(next)
           }
         }}
         style={{
@@ -310,8 +313,9 @@ function ScrubInput({ label, value, onChange, min = 0, max = 9999, step = 1, uni
   const [dragging, setDragging] = useState(false)
   const debounceRef = useRef(null)
   const dragRef     = useRef(null)
+  const liveRef     = useRef(value)
 
-  useEffect(() => { if (!focused && !dragging) setDraft(String(value)) }, [value, focused, dragging])
+  useEffect(() => { liveRef.current = value; if (!focused && !dragging) setDraft(String(value)) }, [value, focused, dragging])
 
   const apply = useCallback((n) => {
     const snapped = step < 1 ? Math.round(n / step) * step : Math.round(n)
@@ -397,7 +401,9 @@ function ScrubInput({ label, value, onChange, min = 0, max = 9999, step = 1, uni
           if (e.key === 'Enter') { commit(); e.currentTarget.blur() }
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             e.preventDefault()
-            apply(value + (e.key === 'ArrowUp' ? step : -step))
+            const next = liveRef.current + (e.key === 'ArrowUp' ? step : -step)
+            liveRef.current = Math.max(min, Math.min(max, next))
+            apply(next)
           }
         }}
         style={{
