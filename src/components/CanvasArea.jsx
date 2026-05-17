@@ -121,64 +121,68 @@ function UndoRedoControls({ onUndo, onRedo, canUndo, canRedo }) {
   )
 }
 
+const pillStyle = {
+  display: 'flex', alignItems: 'center',
+  height: 30,
+  background: 'var(--bg-overlay)',
+  backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+  border: '1px solid rgba(255,255,255,0.10)',
+  borderRadius: 'var(--radius-md)',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+  overflow: 'hidden',
+  userSelect: 'none',
+}
+
+const zoomBtnStyle = {
+  width: 28, height: '100%',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  color: 'rgba(255,255,255,0.6)',
+  background: 'transparent',
+  fontSize: 15, lineHeight: 1, fontWeight: 300,
+  transition: 'color 120ms, background 120ms',
+}
+
 function ZoomControls({ percent, onZoomIn, onZoomOut, onFit, isMobile }) {
+  const hover = {
+    onMouseEnter: e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.07)' },
+    onMouseLeave: e => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.background = 'transparent' },
+  }
+
   return (
     <div style={{
       position: 'absolute',
       bottom: isMobile ? 'max(24px, calc(env(safe-area-inset-bottom, 0px) + 12px))' : 14,
       ...(isMobile ? { left: 14 } : { right: 14 }),
-      display: 'flex', alignItems: 'center',
-      height: 30,
-      background: 'var(--bg-overlay)',
-      backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-      border: '1px solid rgba(255,255,255,0.10)',
-      borderRadius: 'var(--radius-md)',
-      boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
-      overflow: 'hidden',
-      userSelect: 'none',
+      display: 'flex', alignItems: 'center', gap: 6,
     }}>
-      {/* Minus */}
-      <button onClick={onZoomOut} title="Zoom out" style={{
-        width: 30, height: '100%',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: 'rgba(255,255,255,0.65)',
-        background: 'transparent',
-        borderRight: '1px solid rgba(255,255,255,0.08)',
-        fontSize: 16, lineHeight: 1, fontWeight: 300,
-        transition: 'color 120ms, background 120ms',
-      }}
-        onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
-        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; e.currentTarget.style.background = 'transparent' }}
-      >−</button>
+      {/* Fit pill — standalone */}
+      <div style={pillStyle}>
+        <button onClick={onFit} title="Fit to screen" style={{ ...zoomBtnStyle }} {...hover}>
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 5V1.5A.5.5 0 0 1 1.5 1H5"/>
+            <path d="M8 1h3.5a.5.5 0 0 1 .5.5V5"/>
+            <path d="M12 8v3.5a.5.5 0 0 1-.5.5H8"/>
+            <path d="M5 12H1.5a.5.5 0 0 1-.5-.5V8"/>
+          </svg>
+        </button>
+      </div>
 
-      {/* Percentage — click to fit */}
-      <button onClick={onFit} title="Reset zoom to fit" style={{
-        padding: '0 10px', height: '100%',
-        display: 'flex', alignItems: 'center',
-        fontSize: 11, fontWeight: 500, letterSpacing: '0.04em',
-        fontVariantNumeric: 'tabular-nums',
-        color: 'rgba(255,255,255,0.75)',
-        background: 'transparent',
-        borderRight: '1px solid rgba(255,255,255,0.08)',
-        minWidth: 46, justifyContent: 'center',
-        transition: 'color 120ms, background 120ms',
-      }}
-        onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
-        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; e.currentTarget.style.background = 'transparent' }}
-      >{percent}%</button>
+      {/* Zoom − pct + pill */}
+      <div style={pillStyle}>
+        <button onClick={onZoomOut} title="Zoom out" style={{ ...zoomBtnStyle, borderRight: '1px solid rgba(255,255,255,0.08)' }} {...hover}>−</button>
 
-      {/* Plus */}
-      <button onClick={onZoomIn} title="Zoom in" style={{
-        width: 30, height: '100%',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: 'rgba(255,255,255,0.65)',
-        background: 'transparent',
-        fontSize: 16, lineHeight: 1, fontWeight: 300,
-        transition: 'color 120ms, background 120ms',
-      }}
-        onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
-        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; e.currentTarget.style.background = 'transparent' }}
-      >+</button>
+        <div style={{
+          padding: '0 9px', height: '100%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 11, fontWeight: 500, letterSpacing: '0.04em',
+          fontVariantNumeric: 'tabular-nums',
+          color: 'rgba(255,255,255,0.7)',
+          borderRight: '1px solid rgba(255,255,255,0.08)',
+          minWidth: 44,
+        }}>{percent}%</div>
+
+        <button onClick={onZoomIn} title="Zoom in" style={zoomBtnStyle} {...hover}>+</button>
+      </div>
     </div>
   )
 }

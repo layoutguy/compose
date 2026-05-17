@@ -38,7 +38,7 @@ function ensureNoise() {
  *   bgImageEl:       HTMLImageElement | null  (image)
  * }
  */
-function renderBackground(ctx, w, h, bgOpts = {}) {
+function renderBackground(ctx, w, h, bgOpts = {}, forExport = false) {
   const {
     bgType          = 'solid',
     bgColor         = '#11100D',
@@ -84,25 +84,27 @@ function renderBackground(ctx, w, h, bgOpts = {}) {
     ctx.fillRect(0, 0, w, h)
   }
 
-  // Noise grain (very subtle, always applied on top)
-  const noise   = ensureNoise()
-  const pattern = ctx.createPattern(noise, 'repeat')
-  ctx.save()
-  ctx.globalAlpha = 0.022
-  ctx.globalCompositeOperation = 'screen'
-  ctx.fillStyle = pattern
-  ctx.fillRect(0, 0, w, h)
-  ctx.restore()
+  if (!forExport) {
+    // Noise grain (very subtle, always applied on top)
+    const noise   = ensureNoise()
+    const pattern = ctx.createPattern(noise, 'repeat')
+    ctx.save()
+    ctx.globalAlpha = 0.022
+    ctx.globalCompositeOperation = 'screen'
+    ctx.fillStyle = pattern
+    ctx.fillRect(0, 0, w, h)
+    ctx.restore()
 
-  // Vignette — darkens corners, draws focus to centre
-  const vignette = ctx.createRadialGradient(
-    w / 2, h / 2, h * 0.25,
-    w / 2, h / 2, h * 0.95,
-  )
-  vignette.addColorStop(0, 'rgba(0,0,0,0)')
-  vignette.addColorStop(1, 'rgba(0,0,0,0.18)')
-  ctx.fillStyle = vignette
-  ctx.fillRect(0, 0, w, h)
+    // Vignette — darkens corners, draws focus to centre
+    const vignette = ctx.createRadialGradient(
+      w / 2, h / 2, h * 0.25,
+      w / 2, h / 2, h * 0.95,
+    )
+    vignette.addColorStop(0, 'rgba(0,0,0,0)')
+    vignette.addColorStop(1, 'rgba(0,0,0,0.18)')
+    ctx.fillStyle = vignette
+    ctx.fillRect(0, 0, w, h)
+  }
 }
 
 function renderFrame(ctx, w, h, dpr, forExport) {
@@ -169,5 +171,5 @@ export function renderArtboard(canvas, displayW, displayH, dpr, fitScale, forExp
 
   renderBackground(ctx, displayW, displayH, bgOpts)
   if (!forExport) renderGuides(ctx, displayW, displayH, dpr, fitScale)
-  renderFrame(ctx, displayW, displayH, dpr, forExport)
+  if (!forExport) renderFrame(ctx, displayW, displayH, dpr, forExport)
 }

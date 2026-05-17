@@ -34,15 +34,6 @@ const OrbitalMark = () => (
   </svg>
 )
 
-const PanelIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <rect x="1.5" y="1.5" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="1.2"/>
-    <line x1="10.5" y1="2" x2="10.5" y2="14" stroke="currentColor" strokeWidth="1.2"/>
-    <line x1="12" y1="5.5" x2="14" y2="5.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.5"/>
-    <line x1="12" y1="8" x2="14" y2="8" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.5"/>
-    <line x1="12" y1="10.5" x2="14" y2="10.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.5"/>
-  </svg>
-)
 
 function Pipe() {
   return <div style={{ width: 1, height: 12, background: 'var(--border-strong)', flexShrink: 0 }} />
@@ -62,6 +53,16 @@ function Stat({ label, value, muted }) {
     </div>
   )
 }
+
+const PanelIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <rect x="1.5" y="1.5" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="1.2"/>
+    <line x1="10.5" y1="2" x2="10.5" y2="14" stroke="currentColor" strokeWidth="1.2"/>
+    <line x1="12" y1="5.5" x2="14" y2="5.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.5"/>
+    <line x1="12" y1="8" x2="14" y2="8" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.5"/>
+    <line x1="12" y1="10.5" x2="14" y2="10.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.5"/>
+  </svg>
+)
 
 export default function TopBar({ isMobile = false, panelOpen = false, onTogglePanel }) {
   const { grid, logo, display, advanced, layout: layoutProp } = useComposition?.() ?? {}
@@ -114,7 +115,7 @@ export default function TopBar({ isMobile = false, panelOpen = false, onTogglePa
         </div>
       )}
 
-      {/* Right: Live Preview badge */}
+      {/* Right: panel toggle (mobile) or Live Preview badge (desktop) */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {isMobile ? (
           <button

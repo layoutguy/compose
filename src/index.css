@@ -212,6 +212,35 @@ input {
   outline: none;
 }
 
+/* ─── Mobile sheet entrance ─────────────────────────────────────────────────── */
+
+@keyframes sheetSlideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes backdropOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* ─── Dice roll ──────────────────────────────────────────────────────────────── */
+
+@keyframes diceRoll {
+  0%   { transform: rotate(0deg)   scale(1);    }
+  18%  { transform: rotate(110deg) scale(0.68); }
+  38%  { transform: rotate(210deg) scale(0.62); }
+  58%  { transform: rotate(305deg) scale(0.72); }
+  78%  { transform: rotate(355deg) scale(1.18); }
+  90%  { transform: rotate(368deg) scale(1.08); }
+  100% { transform: rotate(360deg) scale(1);    }
+}
+
 /* ─── Popup entrance ────────────────────────────────────────────────────────── */
 
 @keyframes popupIn {
@@ -224,14 +253,4 @@ input {
   to   { opacity: 1; }
 }
 
-/* ─── Mobile sheet entrance ─────────────────────────────────────────────────── */
 
-@keyframes sheetSlideUp {
-  from { transform: translateY(100%); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
-}
-
-@keyframes backdropIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}

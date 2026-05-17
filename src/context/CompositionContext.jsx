@@ -148,7 +148,12 @@ export function CompositionProvider({ children }) {
     if (logoUrlRef.current) URL.revokeObjectURL(logoUrlRef.current)
     const url = URL.createObjectURL(file)
     logoUrlRef.current = url
-    setLogo(p => ({ ...p, url, name: file.name }))
+    // Read natural dimensions so shuffle can constrain sizeDots
+    const img = new Image()
+    img.onload = () => {
+      setLogo(p => ({ ...p, url, name: file.name, naturalW: img.naturalWidth, naturalH: img.naturalHeight }))
+    }
+    img.src = url
   }, [])
 
   const setLogoParam = useCallback((key, val) => setLogo(p => ({ ...p, [key]: val })), [])

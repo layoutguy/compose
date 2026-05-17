@@ -40,14 +40,28 @@ const PlusIcon = () => (
   </svg>
 )
 
-const DiceIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 15 15" fill="none" style={{ display: 'block', marginLeft: 0, marginTop: -1, transition: 'transform 150ms cubic-bezier(0.25,0,0,1)' }}>
+// All 6 dice faces as [cx, cy] dot arrays
+const DICE_FACES = [
+  [[7.5, 7.5]],                                                                          // ⚀ 1
+  [[4.5, 4.5], [10.5, 10.5]],                                                            // ⚁ 2
+  [[4.5, 4.5], [7.5, 7.5],  [10.5, 10.5]],                                              // ⚂ 3
+  [[4.5, 4.5], [10.5, 4.5], [4.5, 10.5],  [10.5, 10.5]],                               // ⚃ 4
+  [[4.5, 4.5], [10.5, 4.5], [7.5, 7.5],   [4.5, 10.5],  [10.5, 10.5]],                 // ⚄ 5
+  [[4.5, 4.5], [10.5, 4.5], [4.5, 7.5],   [10.5, 7.5],  [4.5, 10.5], [10.5, 10.5]],   // ⚅ 6
+]
+
+const DiceIcon = ({ face = 4, rolling = false }) => (
+  <svg
+    width="18" height="18" viewBox="0 0 15 15" fill="none"
+    style={{
+      display: 'block', marginLeft: 0, marginTop: -1,
+      animation: rolling ? 'diceRoll 580ms cubic-bezier(0.4,0,0.2,1) forwards' : 'none',
+    }}
+  >
     <rect x="1" y="1" width="13" height="13" rx="2.5" stroke="currentColor" strokeWidth="1.2"/>
-    <circle cx="4.5" cy="4.5" r="1" fill="currentColor"/>
-    <circle cx="10.5" cy="4.5" r="1" fill="currentColor"/>
-    <circle cx="7.5" cy="7.5" r="1" fill="currentColor"/>
-    <circle cx="4.5" cy="10.5" r="1" fill="currentColor"/>
-    <circle cx="10.5" cy="10.5" r="1" fill="currentColor"/>
+    {DICE_FACES[face].map(([cx, cy], i) => (
+      <circle key={i} cx={cx} cy={cy} r="1" fill="currentColor"/>
+    ))}
   </svg>
 )
 
@@ -152,6 +166,9 @@ export default function BottomToolbar() {
   const fileInputRef       = useRef(null)
   const [posOpen, setPosOpen] = useState(false)
   const posAnchorRef       = useRef(null)
+  const [rolling,  setRolling]  = useState(false)
+  const [diceFace, setDiceFace] = useState(4)      // default: face 5
+  const rollTimers = useRef([])
 
   const handleFileChange = e => {
     const file = e.target.files?.[0]
@@ -162,6 +179,22 @@ export default function BottomToolbar() {
   const logoLoaded = !!logo.url
 
   const handleShuffle = useCallback(() => {
+    // Clear any in-flight timers and restart roll animation
+    rollTimers.current.forEach(clearTimeout)
+    rollTimers.current = []
+    setRolling(false)
+    requestAnimationFrame(() => {
+      setRolling(true)
+      // Cycle through 5 random faces spread over 580ms, land on a random final face
+      const seq = [0,1,2,3,4,5].sort(() => Math.random() - 0.5)
+      ;[0, 100, 200, 310, 430].forEach((delay, i) => {
+        rollTimers.current.push(setTimeout(() => setDiceFace(seq[i]), delay))
+      })
+      rollTimers.current.push(setTimeout(() => {
+        setRolling(false)
+        setDiceFace(seq[5] ?? 4)
+      }, 580))
+    })
     triggerTransition(() => {
       const outW   = advanced.outputW
       const outH   = advanced.outputH
@@ -182,8 +215,31 @@ export default function BottomToolbar() {
       setDotParam('shape',   rFrom(SHAPES))
       setDotParam('opacity', Math.round((0.5 + Math.random() * 0.5) * 100) / 100)
       if (logo.url) {
-        setLogoParam('position', rFrom(POSITIONS))
-        setLogoParam('sizeDots', rInt(1, 6))
+        const pos     = rFrom(POSITIONS)
+        const layout  = computeGridLayout({ cols, rows: bestRows, margin }, { outputW: outW, outputH: outH })
+        const { spacingX } = layout
+
+        // Alignment fractions for the chosen position
+        const ALIGN_MAP = {
+          'top-left':   [0,   0  ], 'top-center': [0.5, 0  ], 'top-right':  [1,   0  ],
+          'mid-left':   [0,   0.5], 'mid-center': [0.5, 0.5], 'mid-right':  [1,   0.5],
+          'bot-left':   [0,   1  ], 'bot-center': [0.5, 1  ], 'bot-right':  [1,   1  ],
+        }
+        const [ax, ay] = ALIGN_MAP[pos] ?? [0.5, 0.5]
+        const aspect   = (logo.naturalW && logo.naturalH) ? logo.naturalH / logo.naturalW : 0.4
+
+        // Anchor is canvas centre (offsetX/Y = 0)
+        // Max sizeDots so all four edges stay inside the canvas with a small inset
+        const inset  = margin
+        const cx = outW / 2, cy = outH / 2
+        const maxW_left  = ax  > 0 ? (cx - inset) / (ax  * spacingX) : Infinity
+        const maxW_right = ax  < 1 ? (outW - cx - inset) / ((1 - ax)  * spacingX) : Infinity
+        const maxH_top   = ay  > 0 ? (cy - inset) / (ay  * spacingX * aspect) : Infinity
+        const maxH_bot   = ay  < 1 ? (outH - cy - inset) / ((1 - ay) * spacingX * aspect) : Infinity
+        const maxSizeDots = Math.floor(Math.min(maxW_left, maxW_right, maxH_top, maxH_bot, 6))
+
+        setLogoParam('position', pos)
+        setLogoParam('sizeDots', rInt(1, Math.max(1, maxSizeDots)))
         setLogoParam('offsetX',  0)
         setLogoParam('offsetY',  0)
       }
@@ -371,12 +427,10 @@ export default function BottomToolbar() {
           pointerEvents: 'all',
           transition: 'background 140ms, transform 120ms',
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#1A6BD9'; e.currentTarget.querySelector('svg').style.transform = 'scale(1.18)' }}
-        onMouseLeave={e => { e.currentTarget.style.background = '#0057C8'; e.currentTarget.querySelector('svg').style.transform = 'scale(1)' }}
-        onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.88) rotate(20deg)' }}
-        onMouseUp={e => { e.currentTarget.style.transform = 'scale(1) rotate(0deg)' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1A6BD9' }}
+        onMouseLeave={e => { e.currentTarget.style.background = '#0057C8' }}
       >
-        <DiceIcon />
+        <DiceIcon face={diceFace} rolling={rolling} />
       </button>
     </div>
   )
