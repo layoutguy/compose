@@ -169,7 +169,7 @@ export function renderArtboard(canvas, displayW, displayH, dpr, fitScale, forExp
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-  renderBackground(ctx, displayW, displayH, bgOpts)
+  renderBackground(ctx, displayW, displayH, bgOpts, forExport)
   if (!forExport) renderGuides(ctx, displayW, displayH, dpr, fitScale)
   if (!forExport) renderFrame(ctx, displayW, displayH, dpr, forExport)
 }
